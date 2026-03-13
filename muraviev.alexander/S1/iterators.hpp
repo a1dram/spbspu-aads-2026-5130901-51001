@@ -104,6 +104,60 @@ namespace muraviev
     node_(node),
     head_(head)
   {}
+
+  template< class T >
+  LCIter< T >::LCIter():
+    node_(nullptr),
+    head_(nullptr)
+  {}
+
+  template< class T >
+  LCIter< T >::LCIter(const LIter< T >& other):
+    node_(other.node_),
+    head_(other.head_)
+  {}
+
+  template< class T >
+  const T& LCIter< T >::operator*() const
+  {
+    return node_->data;
+  }
+
+  template< class T >
+  const T* LCIter< T >::operator->() const
+  {
+    return &(node_->data);
+  }
+
+  template< class T >
+  LCIter< T >& LCIter< T >::operator++()
+  {
+    if (node_ != nullptr) {
+      node_ = node_->next;
+      if (node_ == head_) {
+        node_ = nullptr;
+      }
+    }
+    return *this;
+  }
+
+  template< class T >
+  bool LCIter< T >::operator==(const LCIter& other) const
+  {
+    return node_ == other.node_ && head_ == other.head_;
+  }
+
+  template< class T >
+  bool LCIter< T >::operator!=(const LCIter& other) const
+  {
+    return !(*this == other);
+  }
+
+  template< class T >
+  LCIter< T >::LCIter(const Node< T >* node, const Node< T >* head):
+    node_(node),
+    head_(head)
+  {}
 }
 
 #endif
