@@ -13,9 +13,9 @@ namespace muraviev
     using c_iter = LCIter< T >;
 
     List();
+    ~List();
     List(const List& other);
     List& operator=(const List& other);
-    ~List();
 
     iter begin();
     c_iter begin() const;
@@ -39,6 +39,32 @@ namespace muraviev
     Node< T >* head_;
     Node< T >* tail_;
   };
+
+  template< class T >
+  List< T >::List():
+    head_(nullptr),
+    tail_(nullptr)
+  {}
+  
+  template< class T >
+  List< T >::~List()
+  {
+    clear();
+  }
+
+  template< class T >
+  List< T >::List(const List& other):
+    head_(nullptr),
+    tail_(nullptr)
+  {
+    for (c_iter it = other.begin(); it != other.end(); ++it) {
+      if (empty()) {
+        pushFront(*it);
+      } else {
+        insert(last(), *it);
+      }
+    }
+  }
 }
 
 #endif
