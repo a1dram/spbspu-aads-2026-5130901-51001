@@ -156,3 +156,39 @@ BOOST_AUTO_TEST_CASE(test_list_iterators_on_loop)
   }
   BOOST_TEST(i == 3);
 }
+
+BOOST_AUTO_TEST_CASE(test_get_list_size)
+{
+  List< size_t > nums;
+  nums.pushFront(3);
+  nums.pushFront(2);
+  nums.pushFront(1);
+
+  size_t size = getListSize(nums);
+  BOOST_TEST(size == 3);
+}
+
+BOOST_AUTO_TEST_CASE(test_has_index)
+{
+  List< size_t > nums;
+  nums.pushFront(3);
+  nums.pushFront(2);
+  nums.pushFront(1);
+
+  BOOST_TEST(hasIndex(nums, 0));
+  BOOST_TEST(hasIndex(nums, 1));
+  BOOST_TEST(hasIndex(nums, 2));
+  BOOST_TEST(!hasIndex(nums, 3));
+}
+
+BOOST_AUTO_TEST_CASE(test_get_value_at)
+{
+  List< size_t > nums;
+  nums.pushFront(3);
+  nums.pushFront(2);
+  nums.pushFront(1);
+
+  BOOST_TEST(getValueAt(nums, 0) == 1);
+  BOOST_TEST(getValueAt(nums, 1) == 2);
+  BOOST_TEST(getValueAt(nums, 2) == 3);
+}
