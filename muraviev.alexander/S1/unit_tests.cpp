@@ -1,4 +1,8 @@
-#include <boost/test/unit_test.hpp>
+#ifdef RUN_UNIT_TESTS
+
+#define BOOST_TEST_MODULE S1
+#include <boost/test/included/unit_test.hpp>
+
 #include "list.hpp"
 #include "sequence.hpp"
 #include "read_seq.hpp"
@@ -200,3 +204,5 @@ BOOST_AUTO_TEST_CASE(test_get_value_at)
   BOOST_TEST(getValueAt(nums, 1) == 2);
   BOOST_TEST(getValueAt(nums, 2) == 3);
 }
+
+#endif
