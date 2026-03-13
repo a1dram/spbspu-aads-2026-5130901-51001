@@ -85,6 +85,42 @@ namespace muraviev
 
     return *this;
   }
+
+  template< class T >
+  typename List< T >::iter List< T >::begin()
+  {
+    return iter(head_, head_);
+  }
+
+  template< class T >
+  typename List< T >::c_iter List< T >::begin() const
+  {
+    return c_iter(head_, head_);
+  }
+
+  template< class T >
+  typename List< T >::iter List< T >::end()
+  {
+    return iter(nullptr, head_);
+  }
+
+  template< class T >
+  typename List< T >::c_iter List< T >::end() const
+  {
+    return c_iter(nullptr, head_);
+  }
+
+  template< class T >
+  typename List< T >::iter List< T >::last()
+  {
+    return iter(tail_, head_);
+  }
+
+  template< class T >
+  typename List< T >::c_iter List< T >::last() const
+  {
+    return c_iter(tail_, head_);
+  }
 }
 
 #endif
