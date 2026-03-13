@@ -244,6 +244,23 @@ namespace muraviev
 
     return iter(nextNode, head_);
   }
+
+  template< class T >
+  void List< T >::clear()
+  {
+    if (empty()) {
+      return;
+    }
+
+    tail_->next = nullptr;
+    while (head_ != nullptr) {
+      Node< T >* tmp = head_->next;
+      delete head_;
+      head_ = tmp;
+    }
+    head_ = nullptr;
+    tail_ = nullptr;
+  }
 }
 
 #endif
