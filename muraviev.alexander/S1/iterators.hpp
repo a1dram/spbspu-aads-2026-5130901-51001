@@ -56,6 +56,54 @@ namespace muraviev
     const Node< T >* node_;
     const Node< T >* head_;
   };
+
+  template< class T >
+  LIter< T >::LIter():
+    node_(nullptr),
+    head_(nullptr)
+  {}
+
+  template< class T >
+  T& LIter< T >::operator*() const
+  {
+    return node_->data;
+  }
+
+  template< class T >
+  T* LIter< T >::operator->() const
+  {
+    return &(node_->data);
+  }
+
+  template< class T >
+  LIter< T >& LIter< T >::operator++()
+  {
+    if (node_ != nullptr) {
+      node_ = node_->next;
+      if (node_ == head_) {
+        node_ = nullptr;
+      }
+    }
+    return *this;
+  }
+
+  template< class T >
+  bool LIter< T >::operator==(const LIter& other) const
+  {
+    return node_ == other.node_ && head_ == other.head_;
+  }
+
+  template< class T >
+  bool LIter< T >::operator!=(const LIter& other) const
+  {
+    return !(*this == other);
+  }
+
+  template< class T >
+  LIter< T >::LIter(Node< T >* node, Node< T >* head):
+    node_(node),
+    head_(head)
+  {}
 }
 
 #endif
