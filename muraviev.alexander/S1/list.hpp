@@ -161,6 +161,51 @@ namespace muraviev
       tail_->next = head_;
     }
   }
+
+  template< class T >
+  void List< T >::popFront()
+  {
+    if (empty()) {
+      return;
+    }
+
+    if (head_ == tail_) {
+      delete head_;
+      head_ = nullptr;
+      tail_ = nullptr;
+      return;
+    }
+
+    Node< T >* oldHead = head_;
+    head_ = head_->next;
+    delete oldHead;
+    if (tail_ != nullptr) {
+      tail_->next = head_;
+    }
+  }
+
+  template< class T >
+  void List< T >::popBack()
+  {
+    if (empty()) {
+      return;
+    }
+    if (head_ == tail_) {
+      delete head_;
+      head_ = nullptr;
+      tail_ = nullptr;
+      return;
+    }
+
+    Node< T >* prev = head_;
+    while (prev->next != tail_) {
+      prev = prev->next;
+    }
+
+    delete tail_;
+    tail_ = prev;
+    tail_->next = head_;
+  }
 }
 
 #endif
