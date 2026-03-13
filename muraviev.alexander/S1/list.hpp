@@ -121,6 +121,46 @@ namespace muraviev
   {
     return c_iter(tail_, head_);
   }
+
+  template< class T >
+  bool List< T >::empty() const
+  {
+    return head_ == nullptr;
+  }
+
+  template< class T >
+  void List< T >::pushFront(const T& value)
+  {
+    Node< T >* newNode = new Node< T >(value, head_);
+    head_ = newNode;
+    if (tail_ == nullptr) {
+      tail_ = newNode;
+      tail_->next = head_;
+    } else {
+      tail_->next = head_;
+    }
+  }
+
+  template< class T >
+  void List< T >::insert(iter pos, const T& value)
+  {
+    if (empty()) {
+      pushFront(value);
+      return;
+    }
+    if (pos.node_ == nullptr) {
+      return;
+    }
+
+    Node< T >* newNode = new Node< T >(value, pos.node_->next);
+    pos.node_->next = newNode;
+    if (tail_ == pos.node_) {
+      tail_ = newNode;
+    }
+    if (tail_ != nullptr) {
+      tail_->next = head_;
+    }
+  }
 }
 
 #endif
