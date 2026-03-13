@@ -36,3 +36,55 @@ BOOST_AUTO_TEST_CASE(test_list_push_front_order)
   }
   BOOST_TEST(i == 3);
 }
+
+BOOST_AUTO_TEST_CASE(test_list_insert_after_last)
+{
+  List< int > lst;
+  lst.pushFront(1);
+  lst.insert(lst.last(), 2);
+  lst.insert(lst.last(), 3);
+
+  int expected[3] = {1, 2, 3};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 3);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_pop_front)
+{
+  List< int > lst;
+  lst.pushFront(3);
+  lst.pushFront(2);
+  lst.pushFront(1);
+
+  lst.popFront();
+
+  int expected[2] = {2, 3};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 2);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_pop_back)
+{
+  List< int > lst;
+  lst.pushFront(3);
+  lst.pushFront(2);
+  lst.pushFront(1);
+
+  lst.popBack();
+
+  int expected[2] = {1, 2};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 2);
+}
