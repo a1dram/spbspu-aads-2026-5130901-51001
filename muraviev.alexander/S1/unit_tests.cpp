@@ -137,8 +137,18 @@ BOOST_AUTO_TEST_CASE(test_list_copy_constructor)
     ++it1;
     ++it2;
   }
-  BOOST_TEST(it1 == a.end());
-  BOOST_TEST(it2 == b.end());
+
+  int count1 = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    ++count1;
+  }
+
+  int count2 = 0;
+  for (List< int >::c_iter it = b.begin(); it != b.end(); ++it) {
+    ++count2;
+  }
+
+  BOOST_TEST(count1 == count2);
 }
 
 BOOST_AUTO_TEST_CASE(test_list_iterators_on_loop)
