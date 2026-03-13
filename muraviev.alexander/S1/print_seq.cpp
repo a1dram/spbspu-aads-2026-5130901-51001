@@ -63,7 +63,6 @@ bool muraviev::checkRowSum(const List< namedSequence >& sequences, size_t index)
   for (List< namedSequence >::c_iter it = sequences.begin(); it != sequences.end(); ++it) {
     if (hasIndex(it->numbers, index)) {
       size_t value = getValueAt(it->numbers, index);
-      
       if (std::numeric_limits< size_t >::max() - sum < value) {
         return false;
       }
