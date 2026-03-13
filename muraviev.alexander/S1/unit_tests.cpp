@@ -1,4 +1,5 @@
 #define BOOST_TEST_MODULE S1
+#define BOOST_TEST_NO_MAIN
 #include <boost/test/included/unit_test.hpp>
 
 #include "list.hpp"
