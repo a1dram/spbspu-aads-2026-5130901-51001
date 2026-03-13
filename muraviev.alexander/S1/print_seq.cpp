@@ -118,6 +118,12 @@ void muraviev::printRows(std::ostream& out, const List< namedSequence >& sequenc
 void muraviev::printSums(std::ostream& out, const List< namedSequence >& sequences)
 {
   size_t maxSize = getMaxSize(sequences);
+
+  if (maxSize == 0 && !sequences.empty()) {
+    out << 0 << '\n';
+    return;
+  }
+
   bool first = true;
 
   for (size_t index = 0; index < maxSize; ++index) {
