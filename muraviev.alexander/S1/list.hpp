@@ -65,6 +65,26 @@ namespace muraviev
       }
     }
   }
+
+  template< class T >
+  List< T >& List< T >::operator=(const List& other)
+  {
+    if (this == &other) {
+      return *this;
+    }
+
+    clear();
+
+    for (c_iter it = other.begin(); it != other.end(); ++it) {
+      if (empty()) {
+        pushFront(*it);
+      } else {
+        insert(last(), *it);
+      }
+    }
+
+    return *this;
+  }
 }
 
 #endif
