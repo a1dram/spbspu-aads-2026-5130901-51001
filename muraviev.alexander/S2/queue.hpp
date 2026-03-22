@@ -40,6 +40,32 @@ namespace muraviev
     data_.popBack();
     return value;
   }
+
+  template< class T >
+  T& Queue< T >::front()
+  {
+    if (empty()) {
+      throw std::logic_error("queue is empty");
+    }
+
+    return *data_.last();
+  }
+
+  template< class T >
+  const T& Queue< T >::front() const
+  {
+    if (empty()) {
+      throw std::logic_error("queue is empty");
+    }
+
+    return *data_.last();
+  }
+
+  template< class T >
+  bool Queue< T >::empty() const
+  {
+    return data_.empty();
+  }
 }
 
 #endif
