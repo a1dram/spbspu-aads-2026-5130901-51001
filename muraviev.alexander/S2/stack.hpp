@@ -22,6 +22,33 @@ namespace muraviev
   private:
     List< T > data_;
   };
+
+  template< class T >
+  void Stack< T >::push(const T& value)
+  {
+    data_.pushFront(value);
+  }
+
+  template< class T >
+  T Stack< T >::drop()
+  {
+    if (empty()) {
+      throw std::logic_error("stack is empty");
+    }
+
+    T value = *data_.begin();
+    data_.popFront();
+    return value;
+  }
+
+  template< class T >
+  T& Stack< T >::top()
+  {
+    if (empty()) {
+      throw std::logic_error("stack is empty");
+    }
+    return *data_.begin();
+  }
 }
 
 #endif
