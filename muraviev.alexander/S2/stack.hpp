@@ -49,6 +49,21 @@ namespace muraviev
     }
     return *data_.begin();
   }
+
+  template< class T >
+  const T& Stack< T >::top() const
+  {
+    if (empty()) {
+      throw std::logic_error("stack is empty");
+    }
+    return *data_.begin();
+  }
+
+  template< class T >
+  bool Stack< T >::empty() const
+  {
+    return data_.empty();
+  }
 }
 
 #endif
