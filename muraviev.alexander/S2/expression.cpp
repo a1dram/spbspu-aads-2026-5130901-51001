@@ -208,11 +208,19 @@ namespace muraviev {
 
   long long convertToLongLong(const std::string& token)
   {
+    bool isNegative = false;
+    size_t i = 0;
+    if (token[0] == '-') {
+      isNegative = true;
+      i = 1;
+    }
+
     long long value = 0;
-    for (size_t i = 0; i < token.size(); ++i) {
+    for (; i < token.size(); ++i) {
       value = value * 10 + (token[i] - '0');
     }
-    return value;
+
+    return isNegative ? -value : value;
   }
 
   long long toExponentiate(long long base, long long exp)
@@ -267,5 +275,4 @@ namespace muraviev {
     long long result = st.drop();
     return result;
   }
-
 }
