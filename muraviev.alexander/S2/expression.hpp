@@ -10,8 +10,8 @@ namespace muraviev
 {
   using ll_t = long long;
 
-  inline const ll_t LL_MAX = std::numeric_limits< ll_t >::max();
-  inline const ll_t LL_MIN = std::numeric_limits< ll_t >::min();
+  constexpr ll_t LL_MAX() { return std::numeric_limits< ll_t >::max(); }
+  constexpr ll_t LL_MIN() { return std::numeric_limits< ll_t >::min(); }
 
   struct TokenArray
   {

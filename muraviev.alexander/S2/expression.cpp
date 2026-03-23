@@ -134,7 +134,7 @@ namespace muraviev {
 
   ll_t add(const ll_t& a, const ll_t& b)
   {
-    if ((b > 0 && a > LL_MAX - b) || (b < 0 && a < LL_MIN - b)) {
+    if ((b > 0 && a > LL_MAX() - b) || (b < 0 && a < LL_MIN() - b)) {
       throw std::overflow_error("overflow");
     }
     return a + b;
@@ -142,7 +142,7 @@ namespace muraviev {
 
   ll_t sub(const ll_t& a, const ll_t& b)
   {
-    if ((b > 0 && a < LL_MIN + b) || (b < 0 && a > LL_MAX + b)) {
+    if ((b > 0 && a < LL_MIN() + b) || (b < 0 && a > LL_MAX() + b)) {
       throw std::overflow_error("overflow");
     }
     return a - b;
@@ -153,16 +153,16 @@ namespace muraviev {
     if (a == 0 || b == 0) {
       return 0;
     }
-    if (a == -1 && b == LL_MIN) {
+    if (a == -1 && b == LL_MIN()) {
       throw std::overflow_error("overflow");
     }
-    if (b == -1 && a == LL_MIN) {
+    if (b == -1 && a == LL_MIN()) {
       throw std::overflow_error("overflow");
     }
-    if ((a > 0 && b > 0 && a > LL_MAX / b) ||
-        (a < 0 && b < 0 && a < LL_MAX / b) ||
-        (a > 0 && b < 0 && b < LL_MIN / a) ||
-        (a < 0 && b > 0 && a < LL_MIN / b)) {
+    if ((a > 0 && b > 0 && a > LL_MAX() / b) ||
+        (a < 0 && b < 0 && a < LL_MAX() / b) ||
+        (a > 0 && b < 0 && b < LL_MIN() / a) ||
+        (a < 0 && b > 0 && a < LL_MIN() / b)) {
       throw std::overflow_error("overflow");
     }
     return a * b;
@@ -173,7 +173,7 @@ namespace muraviev {
     if (b == 0) {
       throw std::logic_error("division by zero");
     }
-    if (a == LL_MIN && b == -1) {
+    if (a == LL_MIN() && b == -1) {
       throw std::overflow_error("overflow");
     }
     return a / b;
