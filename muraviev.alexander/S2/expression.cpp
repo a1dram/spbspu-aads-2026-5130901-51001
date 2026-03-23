@@ -176,6 +176,24 @@ namespace muraviev {
     return output;
   }
 
+  long long convertToLongLong(const std::string& token)
+  {
+    long long value = 0;
+    for (size_t i = 0; i < token.size(); ++i) {
+      value = value * 10 + (token[i] - '0');
+    }
+    return value;
+  }
+
+  long long toExponentiate(long long base, long long exp)
+  {
+    long long result = 1;
+    for (long long i = 0; i < exp; ++i) {
+      result *= base;
+    }
+    return result;
+  }
+
   long long evaluatePostfix(Queue< std::string > postfix)
   {
     Stack< long long > st;

@@ -29,6 +29,8 @@ namespace muraviev
 
   Queue< std::string > infixToPostfix(const TokenArray& tokens);
 
+  long long convertToLongLong(const std::string& token);
+  long long toExponentiate(long long base, long long exp);
   long long evaluatePostfix(Queue< std::string > postfix);
 }
 
