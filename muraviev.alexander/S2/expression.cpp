@@ -1,5 +1,9 @@
 #include "expression.hpp"
 
+#include <stdexcept>
+
+#include "stack.hpp"
+
 namespace muraviev {
   TokenArray::TokenArray():
     data(nullptr),
@@ -85,4 +89,51 @@ namespace muraviev {
 
     return tokens;
   }
+  Queue< std::string > infixToPostfix(const TokenArray& tokens)
+  {
+    Stack< std::string > opStack;
+    Queue< std::string > output;
+
+    for (size_t i = 0; i < tokens.size; ++i) {
+      const std::string& t = tokens.data[i];
+
+      if (isNumber(t)) {
+        output.push(t);
+        continue;
+      }
+
+      if (t == "(") {
+        opStack.push(t);
+        continue;
+      }
+
+      if (t == ")") {
+        while (!opStack.empty() && opStack.top() != "(") {
+          output.push(opStack.drop());
+        }
+        if (!opStack.empty()) {
+          opStack.drop();
+        }
+        continue;
+      }
+
+      if (isOperator(t)) {
+        while (!opStack.empty() && isOperator(opStack.top()) &&
+               getPriority(opStack.top()) >= getPriority(t)) {
+          output.push(opStack.drop());
+        }
+        opStack.push(t);
+        continue;
+      }
+
+      throw std::logic_error("unknown token");
+    }
+
+    while (!opStack.empty()) {
+      output.push(opStack.drop());
+    }
+
+    return output;
+  }
+
 }

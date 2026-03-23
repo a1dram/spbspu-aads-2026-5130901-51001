@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "queue.hpp"
+
 namespace muraviev
 {
   struct TokenArray
@@ -19,6 +21,8 @@ namespace muraviev
   };
 
   TokenArray splitTokens(const std::string& line);
+
+  Queue< std::string > infixToPostfix(const TokenArray& tokens);
 }
 
 #endif
