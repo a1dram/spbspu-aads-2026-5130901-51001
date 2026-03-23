@@ -28,6 +28,8 @@ namespace muraviev
   int getPriority(const std::string& op);
 
   Queue< std::string > infixToPostfix(const TokenArray& tokens);
+
+  long long evaluatePostfix(Queue< std::string > postfix);
 }
 
 #endif

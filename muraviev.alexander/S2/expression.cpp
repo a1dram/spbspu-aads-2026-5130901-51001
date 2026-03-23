@@ -176,4 +176,48 @@ namespace muraviev {
     return output;
   }
 
+  long long evaluatePostfix(Queue< std::string > postfix)
+  {
+    Stack< long long > st;
+
+    while (!postfix.empty()) {
+      std::string t = postfix.drop();
+
+      if (isNumber(t)) {
+        st.push(convertToLongLong(t));
+        continue;
+      }
+
+      if (!isOperator(t)) {
+        throw std::logic_error("unknown token");
+      }
+
+      long long right = st.drop();
+      long long left = st.drop();
+
+      if (t == "+") {
+        st.push(left + right);
+      } else if (t == "-") {
+        st.push(left - right);
+      } else if (t == "*") {
+        st.push(left * right);
+      } else if (t == "/") {
+        st.push(left / right);
+      } else if (t == "%") {
+        st.push(left % right);
+      } else if (t == "**") {
+        st.push(toExponentiate(left, right));
+      } else {
+        throw std::logic_error("unknown operator");
+      }
+    }
+
+    if (st.empty()) {
+      throw std::logic_error("empty expression");
+    }
+
+    long long result = st.drop();
+    return result;
+  }
+
 }
