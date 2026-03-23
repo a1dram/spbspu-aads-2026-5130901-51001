@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     in = &file;
   }
 
-  muraviev::Stack< long long > results;
+  muraviev::Stack< muraviev::ll_t > results;
 
   try {
     std::string line;
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
       }
 
       muraviev::Queue< std::string > postfix = muraviev::infixToPostfix(tokens);
-      long long value = muraviev::evaluatePostfix(postfix);
+      muraviev::ll_t value = muraviev::evaluatePostfix(postfix);
       results.push(value);
     }
 

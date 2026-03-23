@@ -1,6 +1,7 @@
 #include "expression.hpp"
 #include <stdexcept>
 #include "stack.hpp"
+#include <limits>
 
 namespace muraviev {
   TokenArray::TokenArray():
@@ -131,6 +132,65 @@ namespace muraviev {
     throw std::logic_error("unknown operator");
   }
 
+  ll_t add(const ll_t& a, const ll_t& b)
+  {
+    if ((b > 0 && a > LL_MAX - b) || (b < 0 && a < LL_MIN - b)) {
+      throw std::overflow_error("overflow");
+    }
+    return a + b;
+  }
+
+  ll_t sub(const ll_t& a, const ll_t& b)
+  {
+    if ((b > 0 && a < LL_MIN + b) || (b < 0 && a > LL_MAX + b)) {
+      throw std::overflow_error("overflow");
+    }
+    return a - b;
+  }
+
+  ll_t mul(const ll_t& a, const ll_t& b)
+  {
+    if (a == 0 || b == 0) {
+      return 0;
+    }
+    if (a == -1 && b == LL_MIN) {
+      throw std::overflow_error("overflow");
+    }
+    if (b == -1 && a == LL_MIN) {
+      throw std::overflow_error("overflow");
+    }
+    if ((a > 0 && b > 0 && a > LL_MAX / b) ||
+        (a < 0 && b < 0 && a < LL_MAX / b) ||
+        (a > 0 && b < 0 && b < LL_MIN / a) ||
+        (a < 0 && b > 0 && a < LL_MIN / b)) {
+      throw std::overflow_error("overflow");
+    }
+    return a * b;
+  }
+
+  ll_t div(const ll_t& a, const ll_t& b)
+  {
+    if (b == 0) {
+      throw std::logic_error("division by zero");
+    }
+    if (a == LL_MIN && b == -1) {
+      throw std::overflow_error("overflow");
+    }
+    return a / b;
+  }
+
+  ll_t mod(const ll_t& a, const ll_t& b)
+  {
+    if (b == 0) {
+      throw std::logic_error("mod by zero");
+    }
+    ll_t r = a % b;
+    if (r < 0) {
+      r += (b < 0 ? -b : b);
+    }
+    return r;
+  }
+
   Queue< std::string > infixToPostfix(const TokenArray& tokens)
   {
     Stack< std::string > opStack;
@@ -204,21 +264,21 @@ namespace muraviev {
     return output;
   }
 
-  long long toExponentiate(long long base, long long exp)
+  ll_t toExponentiate(ll_t base, ll_t exp)
   {
     if (exp < 0) {
       throw std::logic_error("negative exponent");
     }
 
-    long long result = 1;
-    for (long long i = 0; i < exp; ++i) {
-      result *= base;
+    ll_t result = 1;
+    for (ll_t i = 0; i < exp; ++i) {
+      result = mul(result, base);
     }
 
     return result;
   }
 
-  long long convertToLongLong(const std::string& token)
+  ll_t convertToLongLong(const std::string& token)
   {
     bool isNegative = false;
     size_t i = 0;
@@ -227,7 +287,7 @@ namespace muraviev {
       i = 1;
     }
 
-    long long value = 0;
+    ll_t value = 0;
     for (; i < token.size(); ++i) {
       value = value * 10 + (token[i] - '0');
     }
@@ -235,9 +295,9 @@ namespace muraviev {
     return isNegative? -value : value;
   }
 
-  long long evaluatePostfix(Queue< std::string > postfix)
+  ll_t evaluatePostfix(Queue< std::string > postfix)
   {
-    Stack< long long > st;
+    Stack< ll_t > st;
 
     while (!postfix.empty()) {
       std::string t = postfix.drop();
@@ -254,24 +314,21 @@ namespace muraviev {
       if (st.empty()) {
         throw std::logic_error("not enough operands");
       }
-      long long right = st.drop();
+      ll_t right = st.drop();
 
       if (st.empty()) {
         throw std::logic_error("not enough operands");
       }
-      long long left = st.drop();
+      ll_t left = st.drop();
 
       if (t == "+") {
-        st.push(left + right);
+        st.push(add(left, right));
       } else if (t == "-") {
-        st.push(left - right);
+        st.push(sub(left, right));
       } else if (t == "*") {
-        st.push(left * right);
+        st.push(mul(left, right));
       } else if (t == "/") {
-        if (right == 0) {
-          throw std::logic_error("division by zero");
-        }
-        st.push(left / right);
+        st.push(div(left, right));
       } else if (t == "%") {
         if (right == 0) {
           throw std::logic_error("mod by zero");
@@ -288,7 +345,7 @@ namespace muraviev {
       throw std::logic_error("empty expression");
     }
 
-    long long result = st.drop();
+    ll_t result = st.drop();
 
     if (!st.empty()) {
       throw std::logic_error("invalid expression");
