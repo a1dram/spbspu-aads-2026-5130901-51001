@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-#include "common/list.hpp"
+#include "../common/list.hpp"
 
 namespace muraviev
 {
