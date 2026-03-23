@@ -225,10 +225,15 @@ namespace muraviev {
 
   long long toExponentiate(long long base, long long exp)
   {
+    if (exp < 0) {
+      throw std::logic_error("negative exponent");
+    }
+
     long long result = 1;
     for (long long i = 0; i < exp; ++i) {
       result *= base;
     }
+
     return result;
   }
 
@@ -248,8 +253,15 @@ namespace muraviev {
         throw std::logic_error("unknown token");
       }
 
-      long long right = st.drop();
+      if (st.empty()) {
+        throw std::logic_error("not enough operands");
+      }
       long long left = st.drop();
+
+      if (st.empty()) {
+        throw std::logic_error("not enough operands");
+      }
+      long long right = st.drop();
 
       if (t == "+") {
         st.push(left + right);
@@ -258,8 +270,14 @@ namespace muraviev {
       } else if (t == "*") {
         st.push(left * right);
       } else if (t == "/") {
+        if (right == 0) {
+          throw std::logic_error("division by zero");
+        }
         st.push(left / right);
       } else if (t == "%") {
+        if (right == 0) {
+          throw std::logic_error("mod by zero");
+        }
         st.push(left % right);
       } else if (t == "**") {
         st.push(toExponentiate(left, right));
@@ -273,6 +291,11 @@ namespace muraviev {
     }
 
     long long result = st.drop();
+
+    if (!st.empty()) {
+      throw std::logic_error("invalid expression");
+    }
+
     return result;
   }
 }
