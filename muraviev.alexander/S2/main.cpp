@@ -31,8 +31,22 @@ void testInfixToPostfix()
   printQueue(q3);
 }
 
+void testEvaluate()
+{
+  using namespace muraviev;
+
+  std::cout << "\nevaluatePostfix:\n";
+  TokenArray t = splitTokens("3 5 2 * +");
+  Queue<std::string> q;
+  for (size_t i = 0; i < t.size; ++i) {
+    q.push(t.data[i]);
+  }
+  std::cout << "3 5 2 * + = " << evaluatePostfix(q) << '\n';
+}
+
 int main()
 {
   testInfixToPostfix();
+  testEvaluate();
   return 0;
 }
