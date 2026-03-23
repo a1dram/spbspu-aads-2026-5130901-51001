@@ -22,6 +22,11 @@ namespace muraviev
 
   TokenArray splitTokens(const std::string& line);
 
+  bool isNumber(const std::string& token);
+  bool isOperator(const std::string& token);
+
+  int getPriority(const std::string& op);
+
   Queue< std::string > infixToPostfix(const TokenArray& tokens);
 }
 

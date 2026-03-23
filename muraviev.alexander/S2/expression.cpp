@@ -89,6 +89,46 @@ namespace muraviev {
 
     return tokens;
   }
+
+  bool isNumber(const std::string& token)
+  {
+    if (token.empty()) {
+      return false;
+    }
+
+    for (size_t i = 0; i < token.size(); ++i) {
+      char c = token[i];
+      if (c < '0' || c > '9') {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  #include <stdexcept>
+
+  bool isOperator(const std::string& token)
+  {
+    return (token == "+" || token == "-" || token == "*" ||
+       token == "/" || token == "%" || token == "**");
+  }
+
+  int getPriority(const std::string& op)
+  {
+    if (op == "**") {
+      return 3;
+    }
+    if (op == "*" || op == "/" || op == "%") {
+      return 2;
+    }
+    if (op == "+" || op == "-") {
+      return 1;
+    }
+
+    throw std::logic_error("unknown operator");
+  }
+
   Queue< std::string > infixToPostfix(const TokenArray& tokens)
   {
     Stack< std::string > opStack;
