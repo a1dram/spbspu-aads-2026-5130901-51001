@@ -114,8 +114,6 @@ namespace muraviev {
     return true;
   }
 
-  #include <stdexcept>
-
   bool isOperator(const std::string& token)
   {
     return (token == "+" || token == "-" || token == "*" ||
@@ -156,18 +154,38 @@ namespace muraviev {
       }
 
       if (t == ")") {
-        while (!opStack.empty() && opStack.top() != "(") {
-          output.push(opStack.drop());
+        bool found = false;
+        while (!opStack.empty()) {
+          std::string op = opStack.drop();
+          if (op == "(") {
+            found = true;
+            break;
+          }
+          output.push(op);
         }
-        if (!opStack.empty()) {
-          opStack.drop();
+        if (!found) {
+          throw std::logic_error("mismatched parentheses");
         }
         continue;
       }
 
       if (isOperator(t)) {
-        while (!opStack.empty() && isOperator(opStack.top()) &&
-               getPriority(opStack.top()) >= getPriority(t)) {
+        while (!opStack.empty() && isOperator(opStack.top())) {
+          std::string topOp = opStack.top();
+          int pTop = getPriority(topOp);
+          int pCur = getPriority(t);
+
+          bool popIt = false;
+          if (t == "**") {
+            popIt = pTop > pCur;
+          } else {
+            popIt = pTop >= pCur;
+          }
+
+          if (!popIt) {
+            break;
+          }
+
           output.push(opStack.drop());
         }
         opStack.push(t);
@@ -178,7 +196,11 @@ namespace muraviev {
     }
 
     while (!opStack.empty()) {
-      output.push(opStack.drop());
+      std::string op = opStack.drop();
+      if (op == "(" || op == ")") {
+        throw std::logic_error("mismatched parentheses");
+      }
+      output.push(op);
     }
 
     return output;
