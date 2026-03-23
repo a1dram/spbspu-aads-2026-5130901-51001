@@ -39,6 +39,11 @@ int main(int argc, char* argv[])
       results.push(value);
     }
 
+    if (results.empty()) {
+      std::cout << '\n';
+      return 0;
+    }
+
     bool first = true;
     while (!results.empty()) {
       if (!first) {
@@ -48,9 +53,7 @@ int main(int argc, char* argv[])
       std::cout << results.drop();
     }
 
-    if (!first) {
-      std::cout << '\n';
-    }
+    std::cout << '\n';
   } catch (const std::exception& e) {
     std::cerr << e.what() << '\n';
     return 2;

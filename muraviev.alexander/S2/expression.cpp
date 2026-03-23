@@ -330,10 +330,7 @@ namespace muraviev {
       } else if (t == "/") {
         st.push(div(left, right));
       } else if (t == "%") {
-        if (right == 0) {
-          throw std::logic_error("mod by zero");
-        }
-        st.push(left % right);
+        st.push(mod(left, right));
       } else if (t == "**") {
         st.push(toExponentiate(left, right));
       } else {
