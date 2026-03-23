@@ -2,6 +2,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
 #include "expression.hpp"
 #include "stack.hpp"
 
@@ -46,6 +47,7 @@ int main(int argc, char* argv[])
       first = false;
       std::cout << results.drop();
     }
+
     if (!first) {
       std::cout << '\n';
     }

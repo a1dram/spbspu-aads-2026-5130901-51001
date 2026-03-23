@@ -1,11 +1,8 @@
 #include "expression.hpp"
-
 #include <stdexcept>
-
 #include "stack.hpp"
 
-namespace muraviev
-{
+namespace muraviev {
   TokenArray::TokenArray():
     data(nullptr),
     size(0)
@@ -115,7 +112,8 @@ namespace muraviev
 
   bool isOperator(const std::string& token)
   {
-    return token == "+" || token == "-" || token == "*" || token == "/" || token == "%" || token == "**";
+    return (token == "+" || token == "-" || token == "*" ||
+     token == "/" || token == "%" || token == "**");
   }
 
   int getPriority(const std::string& op)
@@ -225,7 +223,7 @@ namespace muraviev
     bool isNegative = false;
     size_t i = 0;
     if (token[0] == '-') {
-      isNegative= true;
+      isNegative = true;
       i = 1;
     }
 
