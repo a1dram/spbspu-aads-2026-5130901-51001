@@ -4,7 +4,8 @@
 
 #include "stack.hpp"
 
-namespace muraviev {
+namespace muraviev
+{
   TokenArray::TokenArray():
     data(nullptr),
     size(0)
@@ -71,10 +72,8 @@ namespace muraviev {
     TokenArray tokens;
     std::string token;
 
-    for (size_t i = 0; i < line.size(); ++i)
-    {
+    for (size_t i = 0; i < line.size(); ++i) {
       char c = line[i];
-
       if (c != ' ') {
         token += c;
       } else if (!token.empty()) {
@@ -116,8 +115,7 @@ namespace muraviev {
 
   bool isOperator(const std::string& token)
   {
-    return (token == "+" || token == "-" || token == "*" ||
-       token == "/" || token == "%" || token == "**");
+    return token == "+" || token == "-" || token == "*" || token == "/" || token == "%" || token == "**";
   }
 
   int getPriority(const std::string& op)
@@ -163,6 +161,7 @@ namespace muraviev {
           }
           output.push(op);
         }
+
         if (!found) {
           throw std::logic_error("mismatched parentheses");
         }
@@ -188,6 +187,7 @@ namespace muraviev {
 
           output.push(opStack.drop());
         }
+
         opStack.push(t);
         continue;
       }
@@ -206,23 +206,6 @@ namespace muraviev {
     return output;
   }
 
-  long long convertToLongLong(const std::string& token)
-  {
-    bool isNegative = false;
-    size_t i = 0;
-    if (token[0] == '-') {
-      isNegative = true;
-      i = 1;
-    }
-
-    long long value = 0;
-    for (; i < token.size(); ++i) {
-      value = value * 10 + (token[i] - '0');
-    }
-
-    return isNegative ? -value : value;
-  }
-
   long long toExponentiate(long long base, long long exp)
   {
     if (exp < 0) {
@@ -235,6 +218,23 @@ namespace muraviev {
     }
 
     return result;
+  }
+
+  long long convertToLongLong(const std::string& token)
+  {
+    bool isNegative = false;
+    size_t i = 0;
+    if (token[0] == '-') {
+      isNegative= true;
+      i = 1;
+    }
+
+    long long value = 0;
+    for (; i < token.size(); ++i) {
+      value = value * 10 + (token[i] - '0');
+    }
+
+    return isNegative? -value : value;
   }
 
   long long evaluatePostfix(Queue< std::string > postfix)
@@ -256,12 +256,12 @@ namespace muraviev {
       if (st.empty()) {
         throw std::logic_error("not enough operands");
       }
-      long long left = st.drop();
+      long long right = st.drop();
 
       if (st.empty()) {
         throw std::logic_error("not enough operands");
       }
-      long long right = st.drop();
+      long long left = st.drop();
 
       if (t == "+") {
         st.push(left + right);
