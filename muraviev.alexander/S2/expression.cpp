@@ -96,7 +96,15 @@ namespace muraviev {
       return false;
     }
 
-    for (size_t i = 0; i < token.size(); ++i) {
+    size_t i = 0;
+    if (token[0] == '-') {
+      if (token.size() == 1) {
+        return false;
+      }
+      i = 1;
+    }
+
+    for (; i < token.size(); ++i) {
       char c = token[i];
       if (c < '0' || c > '9') {
         return false;
