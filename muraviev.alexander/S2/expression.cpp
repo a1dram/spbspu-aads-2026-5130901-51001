@@ -196,20 +196,32 @@ namespace muraviev {
     Stack< std::string > opStack;
     Queue< std::string > output;
 
+    bool needOperand = true;
+
     for (size_t i = 0; i < tokens.size; ++i) {
       const std::string& t = tokens.data[i];
 
       if (isNumber(t)) {
+        if (!needOperand) {
+          throw std::logic_error("invalid expression");
+        }
         output.push(t);
+        needOperand = false;
         continue;
       }
 
       if (t == "(") {
+        if (!needOperand) {
+          throw std::logic_error("invalid expression");
+        }
         opStack.push(t);
         continue;
       }
 
       if (t == ")") {
+        if (needOperand) {
+          throw std::logic_error("invalid expression");
+        }
         bool found = false;
         while (!opStack.empty()) {
           std::string op = opStack.drop();
@@ -223,10 +235,14 @@ namespace muraviev {
         if (!found) {
           throw std::logic_error("mismatched parentheses");
         }
+        needOperand = false;
         continue;
       }
 
       if (isOperator(t)) {
+        if (needOperand) {
+          throw std::logic_error("invalid expression");
+        }
         while (!opStack.empty() && isOperator(opStack.top())) {
           std::string topOp = opStack.top();
           int pTop = getPriority(topOp);
@@ -247,10 +263,15 @@ namespace muraviev {
         }
 
         opStack.push(t);
+        needOperand = true;
         continue;
       }
 
       throw std::logic_error("unknown token");
+    }
+
+    if (needOperand) {
+      throw std::logic_error("invalid expression");
     }
 
     while (!opStack.empty()) {
