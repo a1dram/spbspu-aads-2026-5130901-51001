@@ -2,49 +2,109 @@
 #define BSTREE_HPP
 
 #include <cstddef>
+#include <stdexcept>
 
 namespace muraviev
 {
+  template< class Key, class Value >
+  struct TreeNode
+  {
+    Key key;
+    Value value;
+    TreeNode* left;
+    TreeNode* right;
+
+    TreeNode(const Key& nodeKey, const Value& nodeValue):
+      key(nodeKey),
+      value(nodeValue),
+      left(nullptr),
+      right(nullptr)
+    {}
+  };
+
   template< class Key, class Value, class Compare >
   class BSTree
   {
   public:
-    class const_iterator
+    BSTree():
+      root_(nullptr),
+      size_(0)
+    {}
+
+    ~BSTree()
     {
-    public:
-      bool operator==(const const_iterator&) const
-      {
-        return true;
+      clear(root_);
+    }
+
+    void push(const Key& key, const Value& value)
+    {
+      TreeNode< Key, Value >** current = &root_;
+      while (*current != nullptr) {
+        if (compare_(key, (*current)->key)) {
+          current = &((*current)->left);
+        } else if (compare_((*current)->key, key)) {
+          current = &((*current)->right);
+        } else {
+          (*current)->value = value;
+          return;
+        }
       }
-      bool operator!=(const const_iterator&) const
-      {
-        return false;
+      *current = new TreeNode< Key, Value >(key, value);
+      ++size_;
+    }
+
+    Value& get(const Key& key)
+    {
+      TreeNode< Key, Value >* node = find(key);
+      if (node == nullptr) {
+        throw std::out_of_range("key not found");
       }
-    };
+      return node->value;
+    }
+
+    bool contains(const Key& key) const
+    {
+      return find(key) != nullptr;
+    }
 
     bool empty() const
     {
-      return true;
+      return size_ == 0;
     }
+
     size_t size() const
     {
-      return 0;
+      return size_;
     }
-    const_iterator begin() const
+
+  private:
+    TreeNode< Key, Value >* root_;
+    size_t size_;
+    Compare compare_;
+
+    TreeNode< Key, Value >* find(const Key& key) const
     {
-      return const_iterator();
+      TreeNode< Key, Value >* current = root_;
+      while (current != nullptr) {
+        if (compare_(key, current->key)) {
+          current = current->left;
+        } else if (compare_(current->key, key)) {
+          current = current->right;
+        } else {
+          return current;
+        }
+      }
+      return nullptr;
     }
-    const_iterator end() const
+
+    void clear(TreeNode< Key, Value >* node)
     {
-      return const_iterator();
-    }
-    const_iterator cbegin() const
-    {
-      return begin();
-    }
-    const_iterator cend() const
-    {
-      return end();
+      if (node == nullptr) {
+        return;
+      }
+      clear(node->left);
+      clear(node->right);
+      delete node;
     }
   };
 }
