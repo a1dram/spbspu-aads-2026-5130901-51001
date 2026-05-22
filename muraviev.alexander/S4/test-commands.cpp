@@ -95,3 +95,24 @@ BOOST_AUTO_TEST_CASE(test_commands_print_empty_and_invalid)
       "<INVALID COMMAND>\n"
       "<INVALID COMMAND>\n");
 }
+
+BOOST_AUTO_TEST_CASE(test_commands_complement)
+{
+  muraviev::DatasetTable datasets;
+  muraviev::Dataset first;
+  muraviev::Dataset second;
+  std::istringstream input("complement third second first\nprint third\n");
+  std::ostringstream output;
+
+  first.push(1, "name");
+  first.push(2, "surname");
+  second.push(4, "mouse");
+  second.push(1, "name");
+  second.push(2, "keyboard");
+  datasets.push("first", first);
+  datasets.push("second", second);
+
+  muraviev::executeCommands(input, output, datasets);
+
+  BOOST_TEST(output.str() == "third 4 mouse\n");
+}
