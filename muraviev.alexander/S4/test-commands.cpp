@@ -1,5 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
+#include <sstream>
 #include <cstdio>
 #include <fstream>
 #include <string>
@@ -57,4 +58,20 @@ BOOST_AUTO_TEST_CASE(test_commands_load_datasets_rejects_bad_pairs)
   BOOST_TEST(!muraviev::loadDatasets(filename, datasets));
 
   std::remove(filename.c_str());
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_print_non_empty_dataset)
+{
+  muraviev::DatasetTable datasets;
+  muraviev::Dataset first;
+  std::istringstream input("print first\n");
+  std::ostringstream output;
+
+  first.push(2, "surname");
+  first.push(1, "name");
+  datasets.push("first", first);
+
+  muraviev::executeCommands(input, output, datasets);
+
+  BOOST_TEST(output.str() == "first 1 name 2 surname\n");
 }

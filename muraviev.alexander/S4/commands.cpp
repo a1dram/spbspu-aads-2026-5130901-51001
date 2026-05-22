@@ -1,57 +1,54 @@
 #include "commands.hpp"
 
 #include <fstream>
+#include <iostream>
 
 #include "parsing.hpp"
 
 namespace
 {
-  const std::string& tokenAt(const muraviev::TokenList& tokens, size_t index)
+  using Tokens = muraviev::TokenList;
+  using CommandHandler = bool (*)(muraviev::DatasetTable&, const Tokens&,
+      std::ostream&);
+  using CommandTable = muraviev::BSTree< std::string, CommandHandler,
+      muraviev::Less< std::string > >;
+
+  const std::string& tokenAt(const Tokens& tokens, size_t index);
+  bool printCommand(muraviev::DatasetTable& datasets, const Tokens& tokens,
+      std::ostream& output)
   {
-    size_t current = 0;
-    for (muraviev::TokenList::c_iter it = tokens.begin(); it != tokens.end(); ++it) {
-      if (current == index) {
-        return *it;
-      }
-      ++current;
+    if (muraviev::countTokens(tokens) != 2 || !datasets.contains(tokenAt(tokens, 1))) {
+      return false;
     }
-    throw std::out_of_range("token not found");
+
+    const std::string& name = tokenAt(tokens, 1);
+    const muraviev::Dataset& dataset = datasets.get(name);
+    output << name;
+    for (muraviev::Dataset::const_iterator it = dataset.cbegin();
+        it != dataset.cend(); ++it) {
+      output << ' ' << it->key << ' ' << it->value;
+    }
+    output << '\n';
+    return true;
   }
 }
 
-bool muraviev::loadDatasets(const std::string& filename, DatasetTable& datasets)
+void muraviev::executeCommands(std::istream& input, std::ostream& output,
+    DatasetTable& datasets)
 {
-  std::ifstream input(filename.c_str());
-  if (!input) {
-    return false;
-  }
+  CommandTable commands;
+  commands.push("print", printCommand);
 
   std::string line;
   while (std::getline(input, line)) {
-    if (line.empty()) {
+    Tokens tokens;
+    if (!splitStrictSpaces(line, tokens) || tokens.empty() ||
+        !commands.contains(tokenAt(tokens, 0))) {
+      output << "<INVALID COMMAND>\n";
       continue;
     }
-
-    TokenList tokens;
-    if (!splitStrictSpaces(line, tokens) || tokens.empty()) {
-      return false;
+    if (!commands.get(tokenAt(tokens, 0))(datasets, tokens, output)) {
+      output << "<INVALID COMMAND>\n";
     }
-
-    const std::string name = tokenAt(tokens, 0);
-    const size_t tokensCount = countTokens(tokens);
-    if (datasets.contains(name) || tokensCount % 2 == 0) {
-      return false;
-    }
-
-    Dataset dataset;
-    for (size_t i = 1; i < tokensCount; i += 2) {
-      int key = 0;
-      if (!parseInt(tokenAt(tokens, i), key)) {
-        return false;
-      }
-      dataset.push(key, tokenAt(tokens, i + 1));
-    }
-    datasets.push(name, dataset);
   }
-  return true;
 }
