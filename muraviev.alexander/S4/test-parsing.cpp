@@ -1,0 +1,35 @@
+#include <boost/test/unit_test.hpp>
+
+#include <string>
+
+#include "parsing.hpp"
+
+namespace
+{
+  std::string tokenAt(const muraviev::TokenList& tokens, size_t index)
+  {
+    size_t current = 0;
+    for (muraviev::TokenList::c_iter it = tokens.begin(); it != tokens.end(); ++it) {
+      if (current == index) {
+        return *it;
+      }
+      ++current;
+    }
+    return "";
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_parsing_splits_strict_spaces)
+{
+  muraviev::TokenList tokens;
+
+  BOOST_TEST(muraviev::splitStrictSpaces("first 1 name", tokens));
+  BOOST_TEST(muraviev::countTokens(tokens) == 3);
+  BOOST_TEST(tokenAt(tokens, 0) == "first");
+  BOOST_TEST(tokenAt(tokens, 1) == "1");
+  BOOST_TEST(tokenAt(tokens, 2) == "name");
+
+  BOOST_TEST(!muraviev::splitStrictSpaces("first  1", tokens));
+  BOOST_TEST(!muraviev::splitStrictSpaces(" first 1", tokens));
+  BOOST_TEST(!muraviev::splitStrictSpaces("first 1 ", tokens));
+}

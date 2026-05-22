@@ -1,6 +1,7 @@
 #ifndef PARSING_HPP
 #define PARSING_HPP
 
+#include <cstddef>
 #include <string>
 
 #include "../common/list.hpp"
