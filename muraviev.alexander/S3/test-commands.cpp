@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(test_commands_create_rejects_existing_graph)
 
   executeCommands(input, output, graphs);
 
-  BOOST_TEST(output.str() == "INVALID COMMAND\n");
+  BOOST_TEST(output.str() == "<INVALID COMMAND>\n");
 }
 
 BOOST_AUTO_TEST_CASE(test_commands_merge_duplicates_same_graph_edges)
@@ -107,5 +107,5 @@ BOOST_AUTO_TEST_CASE(test_commands_unknown_command_is_invalid)
 
   executeCommands(input, output, graphs);
 
-  BOOST_TEST(output.str() == "INVALID COMMAND\n");
+  BOOST_TEST(output.str() == "<INVALID COMMAND>\n");
 }
