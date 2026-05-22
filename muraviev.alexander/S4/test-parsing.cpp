@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <string>
+#include <limits>
 
 #include "parsing.hpp"
 
@@ -45,4 +46,17 @@ BOOST_AUTO_TEST_CASE(test_parsing_int_draft)
   BOOST_TEST(!muraviev::parseInt("", value));
   BOOST_TEST(!muraviev::parseInt("-", value));
   BOOST_TEST(!muraviev::parseInt("12x", value));
+}
+
+BOOST_AUTO_TEST_CASE(test_parsing_int_rejects_overflow)
+{
+  int value = 0;
+
+  BOOST_TEST(muraviev::parseInt("2147483647", value));
+  BOOST_TEST(value == std::numeric_limits< int >::max());
+  BOOST_TEST(muraviev::parseInt("-2147483648", value));
+  BOOST_TEST(value == std::numeric_limits< int >::min());
+
+  BOOST_TEST(!muraviev::parseInt("2147483648", value));
+  BOOST_TEST(!muraviev::parseInt("-2147483649", value));
 }

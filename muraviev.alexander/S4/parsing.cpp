@@ -1,6 +1,6 @@
 #include "parsing.hpp"
 
-#include <cstdlib>
+#include <limits>
 
 bool muraviev::splitStrictSpaces(const std::string& line, TokenList& tokens)
 {
@@ -33,15 +33,35 @@ bool muraviev::splitStrictSpaces(const std::string& line, TokenList& tokens)
 
 bool muraviev::parseInt(const std::string& text, int& value)
 {
-  if (text.empty() || text == "-") {
+  if (text.empty()) {
     return false;
   }
-  for (size_t i = text[0] == '-' ? 1 : 0; i < text.size(); ++i) {
-    if (text[i] < '0' || text[i] > '9') {
+
+  size_t index = 0;
+  const bool negative = text[0] == '-';
+  if (negative) {
+    if (text.size() == 1) {
       return false;
     }
+    index = 1;
   }
-  value = std::atoi(text.c_str());
+
+  long long result = 0;
+  const long long limit = negative ?
+      -static_cast< long long >(std::numeric_limits< int >::min()) :
+      std::numeric_limits< int >::max();
+  for (; index < text.size(); ++index) {
+    if (text[index] < '0' || text[index] > '9') {
+      return false;
+    }
+    const int digit = text[index] - '0';
+    if (result > (limit - digit) / 10) {
+      return false;
+    }
+    result = result * 10 + digit;
+  }
+
+  value = negative ? static_cast< int >(-result) : static_cast< int >(result);
   return true;
 }
 
