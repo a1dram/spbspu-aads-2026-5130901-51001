@@ -142,3 +142,34 @@ BOOST_AUTO_TEST_CASE(test_commands_intersect_uses_left_values)
       "fourth 1 name 2 surname\n"
       "yafourth 1 name 2 keyboard\n");
 }
+
+BOOST_AUTO_TEST_CASE(test_commands_union_uses_left_values)
+{
+  muraviev::DatasetTable datasets;
+  muraviev::Dataset first;
+  muraviev::Dataset second;
+  std::istringstream input(
+      "union fifth first second\n"
+      "print fifth\n"
+      "union yafifth second first\n"
+      "print yafifth\n"
+      "union first first second\n"
+      "union bad first missing\n");
+  std::ostringstream output;
+
+  first.push(1, "name");
+  first.push(2, "surname");
+  second.push(4, "mouse");
+  second.push(1, "name");
+  second.push(2, "keyboard");
+  datasets.push("first", first);
+  datasets.push("second", second);
+
+  muraviev::executeCommands(input, output, datasets);
+
+  BOOST_TEST(output.str() ==
+      "fifth 1 name 2 surname 4 mouse\n"
+      "yafifth 1 name 2 keyboard 4 mouse\n"
+      "<INVALID COMMAND>\n"
+      "<INVALID COMMAND>\n");
+}
