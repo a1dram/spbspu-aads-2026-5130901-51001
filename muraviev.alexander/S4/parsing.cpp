@@ -1,5 +1,7 @@
 #include "parsing.hpp"
 
+#include <cstdlib>
+
 bool muraviev::splitStrictSpaces(const std::string& line, TokenList& tokens)
 {
   tokens.clear();
@@ -26,6 +28,20 @@ bool muraviev::splitStrictSpaces(const std::string& line, TokenList& tokens)
   if (!current.empty()) {
     tokens.empty() ? tokens.pushFront(current) : tokens.insert(tokens.last(), current);
   }
+  return true;
+}
+
+bool muraviev::parseInt(const std::string& text, int& value)
+{
+  if (text.empty() || text == "-") {
+    return false;
+  }
+  for (size_t i = text[0] == '-' ? 1 : 0; i < text.size(); ++i) {
+    if (text[i] < '0' || text[i] > '9') {
+      return false;
+    }
+  }
+  value = std::atoi(text.c_str());
   return true;
 }
 
