@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <vector>
 
 #include "parsing.hpp"
@@ -56,13 +55,11 @@ namespace
       return;
     }
     for (size_t i = 0; i < rows.size(); ++i) {
-      if (i != 0) {
-        output << '\n';
-      }
       output << rows[i].vertex;
       for (size_t j = 0; j < rows[i].weights.size(); ++j) {
         output << ' ' << rows[i].weights[j];
       }
+      output << '\n';
     }
   }
 
@@ -98,10 +95,7 @@ namespace
       return true;
     }
     for (size_t i = 0; i < names.size(); ++i) {
-      if (i != 0) {
-        output << '\n';
-      }
-      output << names[i];
+      output << names[i] << '\n';
     }
     return true;
   }
@@ -118,10 +112,7 @@ namespace
       return true;
     }
     for (size_t i = 0; i < vertexes.size(); ++i) {
-      if (i != 0) {
-        output << '\n';
-      }
-      output << vertexes[i];
+      output << vertexes[i] << '\n';
     }
     return true;
   }
@@ -348,7 +339,6 @@ void muraviev::executeCommands(std::istream& input, std::ostream& output,
 {
   CommandTable commands = createCommandTable();
   std::string line;
-  bool hasPreviousOutput = false;
   while (std::getline(input, line)) {
     if (line.empty()) {
       continue;
@@ -356,32 +346,13 @@ void muraviev::executeCommands(std::istream& input, std::ostream& output,
 
     Tokens tokens;
     if (!splitStrictSpaces(line, tokens) || tokens.empty() || !commands.has(tokens[0])) {
-      if (hasPreviousOutput) {
-        output << '\n';
-      }
-      output << "INVALID COMMAND";
-      hasPreviousOutput = true;
+      output << "INVALID COMMAND\n";
       continue;
     }
 
     const CommandHandler handler = commands.at(tokens[0]);
-    std::ostringstream commandOutput;
-    if (!handler(graphs, tokens, commandOutput)) {
-      if (hasPreviousOutput) {
-        output << '\n';
-      }
-      output << "INVALID COMMAND";
-      hasPreviousOutput = true;
-      continue;
-    }
-
-    const std::string result = commandOutput.str();
-    if (!result.empty()) {
-      if (hasPreviousOutput) {
-        output << '\n';
-      }
-      output << result;
-      hasPreviousOutput = true;
+    if (!handler(graphs, tokens, output)) {
+      output << "INVALID COMMAND\n";
     }
   }
 }
