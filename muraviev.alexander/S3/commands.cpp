@@ -50,6 +50,10 @@ namespace
   void printRows(std::ostream& output, std::vector< EdgeRow >& rows)
   {
     std::sort(rows.begin(), rows.end(), edgeRowLess);
+    if (rows.empty()) {
+      output << '\n';
+      return;
+    }
     for (size_t i = 0; i < rows.size(); ++i) {
       output << rows[i].vertex;
       for (size_t j = 0; j < rows[i].weights.size(); ++j) {
@@ -86,6 +90,10 @@ namespace
       names.push_back(it->key);
     }
     std::sort(names.begin(), names.end());
+    if (names.empty()) {
+      output << '\n';
+      return true;
+    }
     for (size_t i = 0; i < names.size(); ++i) {
       output << names[i] << '\n';
     }
@@ -99,6 +107,10 @@ namespace
     }
 
     const std::vector< std::string > vertexes = graphs.at(tokens[1]).collectVertexNames();
+    if (vertexes.empty()) {
+      output << '\n';
+      return true;
+    }
     for (size_t i = 0; i < vertexes.size(); ++i) {
       output << vertexes[i] << '\n';
     }
