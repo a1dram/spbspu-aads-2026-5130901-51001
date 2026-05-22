@@ -33,14 +33,25 @@ bool muraviev::loadDatasets(const std::string& filename, DatasetTable& datasets)
     }
 
     TokenList tokens;
-    if (!splitStrictSpaces(line, tokens) || countTokens(tokens) != 1) {
+    if (!splitStrictSpaces(line, tokens) || tokens.empty()) {
       return false;
     }
+
     const std::string name = tokenAt(tokens, 0);
-    if (datasets.contains(name)) {
+    const size_t tokensCount = countTokens(tokens);
+    if (datasets.contains(name) || tokensCount % 2 == 0) {
       return false;
     }
-    datasets.push(name, Dataset());
+
+    Dataset dataset;
+    for (size_t i = 1; i < tokensCount; i += 2) {
+      int key = 0;
+      if (!parseInt(tokenAt(tokens, i), key)) {
+        return false;
+      }
+      dataset.push(key, tokenAt(tokens, i + 1));
+    }
+    datasets.push(name, dataset);
   }
   return true;
 }
