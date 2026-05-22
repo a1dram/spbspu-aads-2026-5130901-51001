@@ -82,6 +82,7 @@ BOOST_AUTO_TEST_CASE(test_commands_complement_intersect_union)
       "union yafifth second first\n"
       "print yafifth\n"
       "union first first second\n"
+      "print first\n"
       "union bad first missing\n");
   std::ostringstream output;
 
@@ -101,6 +102,82 @@ BOOST_AUTO_TEST_CASE(test_commands_complement_intersect_union)
       "yafourth 1 name 2 keyboard\n"
       "fifth 1 name 2 surname 4 mouse\n"
       "yafifth 1 name 2 keyboard 4 mouse\n"
-      "<INVALID COMMAND>\n"
+      "first 1 name 2 surname 4 mouse\n"
       "<INVALID COMMAND>\n");
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_replace_existing_result)
+{
+  muraviev::DatasetTable datasets;
+  muraviev::Dataset first;
+  muraviev::Dataset second;
+  std::istringstream input(
+      "complement second second first\n"
+      "print second\n"
+      "intersect second second first\n"
+      "print second\n");
+  std::ostringstream output;
+
+  first.push(1, "name");
+  first.push(2, "surname");
+  second.push(4, "mouse");
+  second.push(1, "name");
+  second.push(2, "keyboard");
+  datasets.push("first", first);
+  datasets.push("second", second);
+
+  muraviev::executeCommands(input, output, datasets);
+
+  BOOST_TEST(output.str() ==
+      "second 4 mouse\n"
+      "<EMPTY>\n");
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_union_uses_left_priority_when_replacing)
+{
+  muraviev::DatasetTable datasets;
+  muraviev::Dataset first;
+  muraviev::Dataset second;
+  std::istringstream input(
+      "union first second first\n"
+      "print first\n");
+  std::ostringstream output;
+
+  first.push(1, "name");
+  first.push(3, "machine");
+  first.push(2, "surname");
+  second.push(4, "mouse");
+  second.push(1, "name");
+  second.push(2, "keyboard");
+  datasets.push("first", first);
+  datasets.push("second", second);
+
+  muraviev::executeCommands(input, output, datasets);
+
+  BOOST_TEST(output.str() == "first 1 name 2 keyboard 3 machine 4 mouse\n");
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_replace_with_empty_dataset)
+{
+  muraviev::DatasetTable datasets;
+  muraviev::Dataset first;
+  muraviev::Dataset second;
+  std::istringstream input(
+      "union third first second\n"
+      "complement fourth first first\n"
+      "intersect first third fourth\n"
+      "print first\n");
+  std::ostringstream output;
+
+  first.push(1, "name");
+  first.push(2, "surname");
+  second.push(4, "mouse");
+  second.push(1, "name");
+  second.push(2, "keyboard");
+  datasets.push("first", first);
+  datasets.push("second", second);
+
+  muraviev::executeCommands(input, output, datasets);
+
+  BOOST_TEST(output.str() == "<EMPTY>\n");
 }

@@ -2,6 +2,7 @@
 #define BSTREE_HPP
 
 #include <cstddef>
+#include <ostream>
 #include <stdexcept>
 
 namespace muraviev
@@ -78,6 +79,19 @@ namespace muraviev
     const TreeNodeBase* node_;
     const TreeNodeBase* fakeRoot_;
   };
+
+  template< class Key, class Value >
+  std::ostream& operator<<(std::ostream& output, const BSTIterator< Key, Value >&)
+  {
+    return output << "<BSTIterator>";
+  }
+
+  template< class Key, class Value >
+  std::ostream& operator<<(std::ostream& output,
+      const BSTConstIterator< Key, Value >&)
+  {
+    return output << "<BSTConstIterator>";
+  }
 
   template< class Key, class Value, class Compare >
   class BSTree

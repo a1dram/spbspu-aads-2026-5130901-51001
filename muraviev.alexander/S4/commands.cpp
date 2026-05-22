@@ -51,8 +51,8 @@ namespace
   bool complementCommand(muraviev::DatasetTable& datasets, const Tokens& tokens,
       std::ostream&)
   {
-    if (muraviev::countTokens(tokens) != 4 || datasets.contains(tokenAt(tokens, 1)) ||
-        !datasets.contains(tokenAt(tokens, 2)) || !datasets.contains(tokenAt(tokens, 3))) {
+    if (muraviev::countTokens(tokens) != 4 || !datasets.contains(tokenAt(tokens, 2)) ||
+        !datasets.contains(tokenAt(tokens, 3))) {
       return false;
     }
 
@@ -71,8 +71,8 @@ namespace
   bool intersectCommand(muraviev::DatasetTable& datasets, const Tokens& tokens,
       std::ostream&)
   {
-    if (muraviev::countTokens(tokens) != 4 || datasets.contains(tokenAt(tokens, 1)) ||
-        !datasets.contains(tokenAt(tokens, 2)) || !datasets.contains(tokenAt(tokens, 3))) {
+    if (muraviev::countTokens(tokens) != 4 || !datasets.contains(tokenAt(tokens, 2)) ||
+        !datasets.contains(tokenAt(tokens, 3))) {
       return false;
     }
 
@@ -91,8 +91,8 @@ namespace
   bool unionCommand(muraviev::DatasetTable& datasets, const Tokens& tokens,
       std::ostream&)
   {
-    if (muraviev::countTokens(tokens) != 4 || datasets.contains(tokenAt(tokens, 1)) ||
-        !datasets.contains(tokenAt(tokens, 2)) || !datasets.contains(tokenAt(tokens, 3))) {
+    if (muraviev::countTokens(tokens) != 4 || !datasets.contains(tokenAt(tokens, 2)) ||
+        !datasets.contains(tokenAt(tokens, 3))) {
       return false;
     }
 
