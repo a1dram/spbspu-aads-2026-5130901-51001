@@ -62,3 +62,21 @@ BOOST_AUTO_TEST_CASE(test_bstree_drops_node_with_two_children)
   BOOST_TEST(!tree.contains(4));
   BOOST_TEST(tree.contains(5));
 }
+
+BOOST_AUTO_TEST_CASE(test_bstree_copy_and_clear)
+{
+  TestTree tree;
+
+  tree.push(2, "two");
+  tree.push(1, "one");
+  tree.push(3, "three");
+
+  TestTree copy(tree);
+  tree.clear();
+
+  BOOST_TEST(tree.empty());
+  BOOST_TEST(copy.size() == 3);
+  BOOST_TEST(copy.get(1) == "one");
+  BOOST_TEST(copy.get(2) == "two");
+  BOOST_TEST(copy.get(3) == "three");
+}

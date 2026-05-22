@@ -2,7 +2,6 @@
 #define BSTREE_HPP
 
 #include <cstddef>
-#include <stdexcept>
 
 namespace muraviev
 {
@@ -22,38 +21,31 @@ namespace muraviev
   public:
     using Node = TreeNode< Key, Value >;
 
-    Value drop(const Key& key)
+    BSTree(const BSTree& other):
+      root_(clone(other.root_, nullptr)),
+      size_(other.size_),
+      compare_(other.compare_)
+    {}
+
+    BSTree& operator=(const BSTree& other)
     {
-      Node* removed = find(key);
-      if (removed == nullptr) {
-        throw std::out_of_range("key not found");
+      if (this != &other) {
+        BSTree copy(other);
+        swap(copy);
       }
+      return *this;
+    }
 
-      Value result = removed->value;
-      if (removed->left == nullptr) {
-        replaceNode(removed, removed->right);
-      } else if (removed->right == nullptr) {
-        replaceNode(removed, removed->left);
-      } else {
-        Node* successor = minNode(removed->right);
-        if (successor->parent != removed) {
-          replaceNode(successor, successor->right);
-          successor->right = removed->right;
-          successor->right->parent = successor;
-        }
-        replaceNode(removed, successor);
-        successor->left = removed->left;
-        successor->left->parent = successor;
-      }
-
-      delete removed;
-      --size_;
-      return result;
+    void clear()
+    {
+      deleteSubtree(root_);
+      root_ = nullptr;
+      size_ = 0;
     }
 
     void push(const Key& key, const Value& value);
     Value& get(const Key& key);
-    bool contains(const Key& key) const;
+    Value drop(const Key& key);
     bool empty() const;
     size_t size() const;
 
@@ -62,9 +54,9 @@ namespace muraviev
     size_t size_;
     Compare compare_;
 
-    Node* find(const Key& key) const;
-    Node* minNode(Node* node) const;
-    void replaceNode(Node* oldNode, Node* newNode);
+    Node* clone(const Node* node, Node* parent);
+    void deleteSubtree(Node* node);
+    void swap(BSTree& other);
   };
 }
 
