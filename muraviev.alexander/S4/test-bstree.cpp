@@ -30,3 +30,17 @@ BOOST_AUTO_TEST_CASE(test_bstree_push_get_and_replace)
   BOOST_TEST(tree.get(3) == "three-new");
   BOOST_CHECK_THROW(tree.get(10), std::out_of_range);
 }
+
+BOOST_AUTO_TEST_CASE(test_bstree_drops_leaf_and_one_child)
+{
+  TestTree tree;
+
+  tree.push(2, "two");
+  tree.push(1, "one");
+  tree.push(3, "three");
+
+  BOOST_TEST(tree.drop(1) == "one");
+  BOOST_TEST(tree.drop(2) == "two");
+  BOOST_TEST(tree.size() == 1);
+  BOOST_CHECK_THROW(tree.drop(100), std::out_of_range);
+}
