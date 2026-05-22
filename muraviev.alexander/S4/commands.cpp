@@ -13,7 +13,18 @@ namespace
   using CommandTable = muraviev::BSTree< std::string, CommandHandler,
       muraviev::Less< std::string > >;
 
-  const std::string& tokenAt(const Tokens& tokens, size_t index);
+  const std::string& tokenAt(const Tokens& tokens, size_t index)
+  {
+    size_t current = 0;
+    for (Tokens::c_iter it = tokens.begin(); it != tokens.end(); ++it) {
+      if (current == index) {
+        return *it;
+      }
+      ++current;
+    }
+    throw std::out_of_range("token not found");
+  }
+
   bool printCommand(muraviev::DatasetTable& datasets, const Tokens& tokens,
       std::ostream& output)
   {
@@ -23,6 +34,11 @@ namespace
 
     const std::string& name = tokenAt(tokens, 1);
     const muraviev::Dataset& dataset = datasets.get(name);
+    if (dataset.empty()) {
+      output << "<EMPTY>\n";
+      return true;
+    }
+
     output << name;
     for (muraviev::Dataset::const_iterator it = dataset.cbegin();
         it != dataset.cend(); ++it) {
@@ -41,6 +57,10 @@ void muraviev::executeCommands(std::istream& input, std::ostream& output,
 
   std::string line;
   while (std::getline(input, line)) {
+    if (line.empty()) {
+      continue;
+    }
+
     Tokens tokens;
     if (!splitStrictSpaces(line, tokens) || tokens.empty() ||
         !commands.contains(tokenAt(tokens, 0))) {

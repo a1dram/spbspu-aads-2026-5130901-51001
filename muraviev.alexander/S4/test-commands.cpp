@@ -75,3 +75,23 @@ BOOST_AUTO_TEST_CASE(test_commands_print_non_empty_dataset)
 
   BOOST_TEST(output.str() == "first 1 name 2 surname\n");
 }
+
+BOOST_AUTO_TEST_CASE(test_commands_print_empty_and_invalid)
+{
+  muraviev::DatasetTable datasets;
+  muraviev::Dataset first;
+  std::istringstream input("print first\nprint empty\nprint missing\nunknown\n");
+  std::ostringstream output;
+
+  first.push(1, "name");
+  datasets.push("first", first);
+  datasets.push("empty", muraviev::Dataset());
+
+  muraviev::executeCommands(input, output, datasets);
+
+  BOOST_TEST(output.str() ==
+      "first 1 name\n"
+      "<EMPTY>\n"
+      "<INVALID COMMAND>\n"
+      "<INVALID COMMAND>\n");
+}
