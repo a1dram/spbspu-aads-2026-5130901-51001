@@ -80,3 +80,20 @@ BOOST_AUTO_TEST_CASE(test_bstree_copy_and_clear)
   BOOST_TEST(copy.get(2) == "two");
   BOOST_TEST(copy.get(3) == "three");
 }
+
+BOOST_AUTO_TEST_CASE(test_bstree_rotations_update_height)
+{
+  TestTree left;
+  left.push(1, "one");
+  left.push(2, "two");
+  TestTree::const_iterator leftIt = left.cbegin();
+  ++leftIt;
+  left.rotateLeft(leftIt);
+  BOOST_TEST(left.height() == 2);
+
+  TestTree right;
+  right.push(2, "two");
+  right.push(1, "one");
+  right.rotateRight(right.cbegin());
+  BOOST_TEST(right.height() == 2);
+}
