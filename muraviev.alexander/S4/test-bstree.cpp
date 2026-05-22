@@ -44,3 +44,21 @@ BOOST_AUTO_TEST_CASE(test_bstree_drops_leaf_and_one_child)
   BOOST_TEST(tree.size() == 1);
   BOOST_CHECK_THROW(tree.drop(100), std::out_of_range);
 }
+
+BOOST_AUTO_TEST_CASE(test_bstree_drops_node_with_two_children)
+{
+  TestTree tree;
+
+  tree.push(4, "four");
+  tree.push(2, "two");
+  tree.push(6, "six");
+  tree.push(1, "one");
+  tree.push(3, "three");
+  tree.push(5, "five");
+  tree.push(7, "seven");
+
+  BOOST_TEST(tree.drop(4) == "four");
+  BOOST_TEST(tree.size() == 6);
+  BOOST_TEST(!tree.contains(4));
+  BOOST_TEST(tree.contains(5));
+}

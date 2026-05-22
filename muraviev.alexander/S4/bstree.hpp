@@ -28,13 +28,24 @@ namespace muraviev
       if (removed == nullptr) {
         throw std::out_of_range("key not found");
       }
-      if (removed->left != nullptr && removed->right != nullptr) {
-        throw std::logic_error("two-child delete is fixed later");
-      }
 
       Value result = removed->value;
-      Node* child = removed->left != nullptr ? removed->left : removed->right;
-      replaceNode(removed, child);
+      if (removed->left == nullptr) {
+        replaceNode(removed, removed->right);
+      } else if (removed->right == nullptr) {
+        replaceNode(removed, removed->left);
+      } else {
+        Node* successor = minNode(removed->right);
+        if (successor->parent != removed) {
+          replaceNode(successor, successor->right);
+          successor->right = removed->right;
+          successor->right->parent = successor;
+        }
+        replaceNode(removed, successor);
+        successor->left = removed->left;
+        successor->left->parent = successor;
+      }
+
       delete removed;
       --size_;
       return result;
@@ -52,6 +63,7 @@ namespace muraviev
     Compare compare_;
 
     Node* find(const Key& key) const;
+    Node* minNode(Node* node) const;
     void replaceNode(Node* oldNode, Node* newNode);
   };
 }
