@@ -6,7 +6,7 @@ namespace
 {
   using Tokens = muraviev::TokenList;
 
-  bool complementCommand(muraviev::DatasetTable& datasets, const Tokens& tokens,
+  bool intersectCommand(muraviev::DatasetTable& datasets, const Tokens& tokens,
       std::ostream&)
   {
     if (muraviev::countTokens(tokens) != 4 || datasets.contains(tokenAt(tokens, 1)) ||
@@ -18,7 +18,7 @@ namespace
     const muraviev::Dataset& right = datasets.get(tokenAt(tokens, 3));
     muraviev::Dataset result;
     for (muraviev::Dataset::const_iterator it = left.cbegin(); it != left.cend(); ++it) {
-      if (!right.contains(it->key)) {
+      if (right.contains(it->key)) {
         result.push(it->key, it->value);
       }
     }
@@ -26,10 +26,10 @@ namespace
     return true;
   }
 
-  muraviev::DatasetTable registerComplementExample()
+  muraviev::DatasetTable registerIntersectExample()
   {
     CommandTable commands = createCommandTable();
-    commands.push("complement", complementCommand);
+    commands.push("intersect", intersectCommand);
     return muraviev::DatasetTable();
   }
 }

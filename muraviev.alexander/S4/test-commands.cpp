@@ -116,3 +116,29 @@ BOOST_AUTO_TEST_CASE(test_commands_complement)
 
   BOOST_TEST(output.str() == "third 4 mouse\n");
 }
+
+BOOST_AUTO_TEST_CASE(test_commands_intersect_uses_left_values)
+{
+  muraviev::DatasetTable datasets;
+  muraviev::Dataset first;
+  muraviev::Dataset second;
+  std::istringstream input(
+      "intersect fourth first second\n"
+      "print fourth\n"
+      "intersect yafourth second first\n"
+      "print yafourth\n");
+  std::ostringstream output;
+
+  first.push(1, "name");
+  first.push(2, "surname");
+  second.push(1, "name");
+  second.push(2, "keyboard");
+  datasets.push("first", first);
+  datasets.push("second", second);
+
+  muraviev::executeCommands(input, output, datasets);
+
+  BOOST_TEST(output.str() ==
+      "fourth 1 name 2 surname\n"
+      "yafourth 1 name 2 keyboard\n");
+}
