@@ -1,5 +1,7 @@
-#include <fstream>
+#include <exception>
 #include <iostream>
+
+#include "commands.hpp"
 
 int main(int argc, char* argv[])
 {
@@ -8,9 +10,16 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  std::ifstream input(argv[1]);
-  if (!input) {
-    std::cerr << "invalid input file\n";
+  try {
+    muraviev::DatasetTable datasets;
+    if (!muraviev::loadDatasets(argv[1], datasets)) {
+      std::cerr << "invalid input file\n";
+      return 1;
+    }
+
+    muraviev::executeCommands(std::cin, std::cout, datasets);
+  } catch (const std::exception& error) {
+    std::cerr << error.what() << '\n';
     return 1;
   }
 
