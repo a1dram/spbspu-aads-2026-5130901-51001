@@ -346,13 +346,13 @@ void muraviev::executeCommands(std::istream& input, std::ostream& output,
 
     Tokens tokens;
     if (!splitStrictSpaces(line, tokens) || tokens.empty() || !commands.has(tokens[0])) {
-      output << "INVALID COMMAND\n";
+      output << "<INVALID COMMAND>\n";
       continue;
     }
 
     const CommandHandler handler = commands.at(tokens[0]);
     if (!handler(graphs, tokens, output)) {
-      output << "INVALID COMMAND\n";
+      output << "<INVALID COMMAND>\n";
     }
   }
 }
