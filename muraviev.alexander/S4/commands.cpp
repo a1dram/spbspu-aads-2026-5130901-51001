@@ -110,17 +110,60 @@ namespace
     datasets.push(tokenAt(tokens, 1), result);
     return true;
   }
+
+  CommandTable createCommandTable()
+  {
+    CommandTable commands;
+    commands.push("print", printCommand);
+    commands.push("complement", complementCommand);
+    commands.push("intersect", intersectCommand);
+    commands.push("union", unionCommand);
+    return commands;
+  }
+}
+
+bool muraviev::loadDatasets(const std::string& filename, DatasetTable& datasets)
+{
+  std::ifstream input(filename.c_str());
+  if (!input) {
+    return false;
+  }
+
+  std::string line;
+  while (std::getline(input, line)) {
+    if (line.empty()) {
+      continue;
+    }
+
+    Tokens tokens;
+    if (!splitStrictSpaces(line, tokens) || tokens.empty()) {
+      return false;
+    }
+
+    const std::string name = tokenAt(tokens, 0);
+    const size_t tokensCount = countTokens(tokens);
+    if (datasets.contains(name) || tokensCount % 2 == 0) {
+      return false;
+    }
+
+    Dataset dataset;
+    for (size_t i = 1; i < tokensCount; i += 2) {
+      int key = 0;
+      if (!parseInt(tokenAt(tokens, i), key)) {
+        return false;
+      }
+      dataset.push(key, tokenAt(tokens, i + 1));
+    }
+    datasets.push(name, dataset);
+  }
+
+  return true;
 }
 
 void muraviev::executeCommands(std::istream& input, std::ostream& output,
     DatasetTable& datasets)
 {
-  CommandTable commands;
-  commands.push("print", printCommand);
-  commands.push("complement", complementCommand);
-  commands.push("intersect", intersectCommand);
-  commands.push("union", unionCommand);
-
+  CommandTable commands = createCommandTable();
   std::string line;
   while (std::getline(input, line)) {
     if (line.empty()) {
@@ -133,7 +176,9 @@ void muraviev::executeCommands(std::istream& input, std::ostream& output,
       output << "<INVALID COMMAND>\n";
       continue;
     }
-    if (!commands.get(tokenAt(tokens, 0))(datasets, tokens, output)) {
+
+    const CommandHandler handler = commands.get(tokenAt(tokens, 0));
+    if (!handler(datasets, tokens, output)) {
       output << "<INVALID COMMAND>\n";
     }
   }

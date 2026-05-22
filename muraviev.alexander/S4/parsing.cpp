@@ -14,19 +14,28 @@ bool muraviev::splitStrictSpaces(const std::string& line, TokenList& tokens)
 
   std::string current;
   for (size_t i = 0; i < line.size(); ++i) {
-    if (line[i] == ' ') {
+    const char c = line[i];
+    if (c == ' ') {
       if (current.empty()) {
         return false;
       }
-      tokens.empty() ? tokens.pushFront(current) : tokens.insert(tokens.last(), current);
+      if (tokens.empty()) {
+        tokens.pushFront(current);
+      } else {
+        tokens.insert(tokens.last(), current);
+      }
       current.clear();
     } else {
-      current += line[i];
+      current += c;
     }
   }
 
   if (!current.empty()) {
-    tokens.empty() ? tokens.pushFront(current) : tokens.insert(tokens.last(), current);
+    if (tokens.empty()) {
+      tokens.pushFront(current);
+    } else {
+      tokens.insert(tokens.last(), current);
+    }
   }
   return true;
 }
@@ -51,10 +60,11 @@ bool muraviev::parseInt(const std::string& text, int& value)
       -static_cast< long long >(std::numeric_limits< int >::min()) :
       std::numeric_limits< int >::max();
   for (; index < text.size(); ++index) {
-    if (text[index] < '0' || text[index] > '9') {
+    const char c = text[index];
+    if (c < '0' || c > '9') {
       return false;
     }
-    const int digit = text[index] - '0';
+    const int digit = c - '0';
     if (result > (limit - digit) / 10) {
       return false;
     }
