@@ -2,6 +2,7 @@
 #define RB_TREE_HPP
 
 #include <cstddef>
+#include <ostream>
 #include <stdexcept>
 
 namespace muraviev
@@ -51,6 +52,36 @@ namespace muraviev
   {
   public:
     using Node = RBNode< Key, Value >;
+    class iterator
+    {
+    public:
+      iterator(): node_(0), end_(0) {}
+      Node& operator*() const { return *static_cast< Node* >(node_); }
+      Node* operator->() const { return static_cast< Node* >(node_); }
+      iterator& operator++()
+      {
+        if (node_ == 0 || node_ == end_) { return *this; }
+        if (node_->right != 0) {
+          node_ = node_->right;
+          while (node_->left != 0) { node_ = node_->left; }
+          return *this;
+        }
+        RBNodeBase* parent = node_->parent;
+        while (parent != 0 && parent != end_ && node_ == parent->right) {
+          node_ = parent;
+          parent = parent->parent;
+        }
+        node_ = parent == 0 ? end_ : parent;
+        return *this;
+      }
+      bool operator==(const iterator& other) const { return node_ == other.node_ && end_ == other.end_; }
+      bool operator!=(const iterator& other) const { return !(*this == other); }
+    private:
+      friend class RBTree;
+      iterator(RBNodeBase* node, RBNodeBase* end): node_(node), end_(end) {}
+      RBNodeBase* node_;
+      RBNodeBase* end_;
+    };
     RBTree(): fakeRoot_(new RBNodeBase), size_(0), compare_() {}
     ~RBTree() { clear(); delete fakeRoot_; }
     void push(const Key& key, const Value& value)
@@ -88,6 +119,8 @@ namespace muraviev
       fakeRoot_->right = 0;
       size_ = 0;
     }
+    iterator begin() { RBNodeBase* first = getMin(root()); return iterator(first == 0 ? endNode() : first, endNode()); }
+    iterator end() { return iterator(endNode(), endNode()); }
     bool valid() const
     {
       return root() == 0 || root()->color == BLACK;
@@ -123,6 +156,12 @@ namespace muraviev
       delete static_cast< Node* >(node);
     }
   };
+
+  template< class Key, class Value >
+  std::ostream& operator<<(std::ostream& output, const typename RBTree< Key, Value, Less< Key > >::iterator&)
+  {
+    return output << "<RBIterator>";
+  }
 }
 
 #endif
