@@ -609,6 +609,117 @@ namespace muraviev
     return node;
   }
 
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::rotateLeft(RBNodeBase* node)
+  {
+    RBNodeBase* right = node->right;
+    node->right = right->left;
+    if (right->left != nullptr) {
+      right->left->parent = node;
+    }
+    right->parent = node->parent;
+    if (node->parent == fakeRoot_) {
+      fakeRoot_->left = right;
+    } else if (node == node->parent->left) {
+      node->parent->left = right;
+    } else {
+      node->parent->right = right;
+    }
+    right->left = node;
+    node->parent = right;
+  }
+
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::rotateRight(RBNodeBase* node)
+  {
+    RBNodeBase* left = node->left;
+    node->left = left->right;
+    if (left->right != nullptr) {
+      left->right->parent = node;
+    }
+    left->parent = node->parent;
+    if (node->parent == fakeRoot_) {
+      fakeRoot_->left = left;
+    } else if (node == node->parent->right) {
+      node->parent->right = left;
+    } else {
+      node->parent->left = left;
+    }
+    left->right = node;
+    node->parent = left;
+  }
+
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::fixInsert(RBNodeBase* node)
+  {
+    while (node->parent != fakeRoot_ && node->parent->color == RED) {
+      RBNodeBase* parent = node->parent;
+      RBNodeBase* grand = parent->parent;
+      if (parent == grand->left) {
+        RBNodeBase* uncle = grand->right;
+        if (colorOf(uncle) == RED) {
+          parent->color = BLACK;
+          uncle->color = BLACK;
+          grand->color = RED;
+          node = grand;
+        } else {
+          if (node == parent->right) {
+            node = parent;
+            rotateLeft(node);
+            parent = node->parent;
+            grand = parent->parent;
+          }
+          parent->color = BLACK;
+          grand->color = RED;
+          rotateRight(grand);
+        }
+      } else {
+        RBNodeBase* uncle = grand->left;
+        if (colorOf(uncle) == RED) {
+          parent->color = BLACK;
+          uncle->color = BLACK;
+          grand->color = RED;
+          node = grand;
+        } else {
+          if (node == parent->left) {
+            node = parent;
+            rotateRight(node);
+            parent = node->parent;
+            grand = parent->parent;
+          }
+          parent->color = BLACK;
+          grand->color = RED;
+          rotateLeft(grand);
+        }
+      }
+    }
+    root()->color = BLACK;
+  }
+
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::transplant(RBNodeBase* oldNode,
+      RBNodeBase* newNode)
+  {
+    if (oldNode->parent == fakeRoot_) {
+      fakeRoot_->left = newNode;
+    } else if (oldNode == oldNode->parent->left) {
+      oldNode->parent->left = newNode;
+    } else {
+      oldNode->parent->right = newNode;
+    }
+    if (newNode != nullptr) {
+      newNode->parent = oldNode->parent;
+    }
+  }
+
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::fixDrop(RBNodeBase* node,
+      RBNodeBase* parent)
+  {
+    while (node != root() && colorOf(node) == BLACK) {
+      if (parent == nullptr || parent == fakeRoot_) {};
+    };
+  };
 }
 
 #endif
