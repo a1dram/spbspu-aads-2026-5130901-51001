@@ -90,6 +90,39 @@ namespace
             muraviev::tokenAt(tokens, 3), amount);
   }
 
+  bool showTransferCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    if (muraviev::countTokens(tokens) != 2 ||
+        !context.transfers().contains(muraviev::tokenAt(tokens, 1))) {
+      return false;
+    }
+    const muraviev::Transfer& transfer = context.transfers().get(muraviev::tokenAt(tokens, 1));
+    output << "<ID: " << transfer.id << ", FROM: " << transfer.fromAddress
+        << ", TO: " << transfer.toAddress << ", AMOUNT: " << transfer.amount
+        << ">\n";
+    return true;
+  }
+
+  bool transfersCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    if (muraviev::countTokens(tokens) != 2 ||
+        !context.wallets().contains(muraviev::tokenAt(tokens, 1))) {
+      return false;
+    }
+    std::vector< std::string > ids;
+    const std::string& address = muraviev::tokenAt(tokens, 1);
+    for (muraviev::TransferTree::const_iterator it = context.transfers().cbegin();
+        it != context.transfers().cend(); ++it) {
+      if (it->value.fromAddress == address || it->value.toAddress == address) {
+        ids.push_back(it->key);
+      }
+    }
+    printList(output, ids);
+    return true;
+  }
+
   CommandTable createCommandTable()
   {
     CommandTable commands;
@@ -98,6 +131,8 @@ namespace
     commands.push("drop-wallet", dropWalletCommand);
     commands.push("wallets", walletsCommand);
     commands.push("make-transfer", makeTransferCommand);
+    commands.push("show-transfer", showTransferCommand);
+    commands.push("transfers", transfersCommand);
     return commands;
   }
 }
