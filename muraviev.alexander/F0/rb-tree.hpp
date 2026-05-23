@@ -178,6 +178,136 @@ namespace muraviev
   }
 
   template< class Key, class Value >
+  RBIterator< Key, Value >::RBIterator():
+    node_(nullptr),
+    fakeRoot_(nullptr)
+  {}
+
+  template< class Key, class Value >
+  typename RBIterator< Key, Value >::Node&
+  RBIterator< Key, Value >::operator*() const
+  {
+    return *static_cast< Node* >(node_);
+  }
+
+  template< class Key, class Value >
+  typename RBIterator< Key, Value >::Node*
+  RBIterator< Key, Value >::operator->() const
+  {
+    return static_cast< Node* >(node_);
+  }
+
+  template< class Key, class Value >
+  RBIterator< Key, Value >& RBIterator< Key, Value >::operator++()
+  {
+    if (node_ == nullptr || node_ == fakeRoot_) {
+      return *this;
+    }
+    if (node_->right != nullptr) {
+      node_ = node_->right;
+      while (node_->left != nullptr) {
+        node_ = node_->left;
+      }
+      return *this;
+    }
+    RBNodeBase* parent = node_->parent;
+    while (parent != nullptr && parent != fakeRoot_ && node_ == parent->right) {
+      node_ = parent;
+      parent = parent->parent;
+    }
+    node_ = (parent == nullptr) ? fakeRoot_ : parent;
+    return *this;
+  }
+
+  template< class Key, class Value >
+  bool RBIterator< Key, Value >::operator==(const RBIterator& other) const
+  {
+    return node_ == other.node_ && fakeRoot_ == other.fakeRoot_;
+  }
+
+  template< class Key, class Value >
+  bool RBIterator< Key, Value >::operator!=(const RBIterator& other) const
+  {
+    return !(*this == other);
+  }
+
+  template< class Key, class Value >
+  RBIterator< Key, Value >::RBIterator(RBNodeBase* node, RBNodeBase* fakeRoot):
+    node_(node),
+    fakeRoot_(fakeRoot)
+  {}
+
+  template< class Key, class Value >
+  RBConstIterator< Key, Value >::RBConstIterator():
+    node_(nullptr),
+    fakeRoot_(nullptr)
+  {}
+
+  template< class Key, class Value >
+  RBConstIterator< Key, Value >::RBConstIterator(
+      const RBIterator< Key, Value >& other):
+    node_(other.node_),
+    fakeRoot_(other.fakeRoot_)
+  {}
+
+  template< class Key, class Value >
+  const typename RBConstIterator< Key, Value >::Node&
+  RBConstIterator< Key, Value >::operator*() const
+  {
+    return *static_cast< const Node* >(node_);
+  }
+
+  template< class Key, class Value >
+  const typename RBConstIterator< Key, Value >::Node*
+  RBConstIterator< Key, Value >::operator->() const
+  {
+    return static_cast< const Node* >(node_);
+  }
+
+  template< class Key, class Value >
+  RBConstIterator< Key, Value >& RBConstIterator< Key, Value >::operator++()
+  {
+    if (node_ == nullptr || node_ == fakeRoot_) {
+      return *this;
+    }
+    if (node_->right != nullptr) {
+      node_ = node_->right;
+      while (node_->left != nullptr) {
+        node_ = node_->left;
+      }
+      return *this;
+    }
+    const RBNodeBase* parent = node_->parent;
+    while (parent != nullptr && parent != fakeRoot_ && node_ == parent->right) {
+      node_ = parent;
+      parent = parent->parent;
+    }
+    node_ = (parent == nullptr) ? fakeRoot_ : parent;
+    return *this;
+  }
+
+  template< class Key, class Value >
+  bool RBConstIterator< Key, Value >::operator==(
+      const RBConstIterator& other) const
+  {
+    return node_ == other.node_ && fakeRoot_ == other.fakeRoot_;
+  }
+
+  template< class Key, class Value >
+  bool RBConstIterator< Key, Value >::operator!=(
+      const RBConstIterator& other) const
+  {
+    return !(*this == other);
+  }
+
+  template< class Key, class Value >
+  RBConstIterator< Key, Value >::RBConstIterator(const RBNodeBase* node,
+      const RBNodeBase* fakeRoot):
+    node_(node),
+    fakeRoot_(fakeRoot)
+  {}
+
+  template< class Key, class Value, class Compare >
 }
 
 #endif
