@@ -4,6 +4,9 @@
 #include <cstddef>
 #include <string>
 
+#include "../common/list.hpp"
+#include "rb-tree.hpp"
+
 namespace muraviev
 {
   struct Wallet
@@ -15,6 +18,10 @@ namespace muraviev
     size_t outCount;
     long long inSum;
     long long outSum;
+
+    Wallet();
+    Wallet(const std::string& walletAddress, const std::string& walletLabel,
+        long long walletBalance);
   };
 
   struct Transfer
@@ -24,7 +31,15 @@ namespace muraviev
     std::string toAddress;
     long long amount;
     size_t order;
+
+    Transfer();
+    Transfer(const std::string& transferId, const std::string& from,
+        const std::string& to, long long transferAmount, size_t transferOrder);
   };
+
+  using WalletTree = RBTree< std::string, Wallet, Less< std::string > >;
+  using TransferTree = RBTree< std::string, Transfer, Less< std::string > >;
+  using TransferLog = List< Transfer >;
 }
 
 #endif
