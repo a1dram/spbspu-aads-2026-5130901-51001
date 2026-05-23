@@ -79,3 +79,13 @@ const muraviev::TransferLog& muraviev::CommandContext::transferLog() const
 {
   return transferLog_;
 }
+
+bool muraviev::CommandContext::addWallet(const std::string& address,
+    const std::string& label, long long balance)
+{
+  if (wallets_.contains(address) || balance < 0) {
+    return false;
+  }
+  wallets_.push(address, Wallet(address, label, balance));
+  return true;
+}
