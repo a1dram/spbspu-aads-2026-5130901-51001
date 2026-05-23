@@ -51,11 +51,11 @@ namespace muraviev
   {
   public:
     using Node = RBNode< Key, Value >;
-    RBTree(): root_(0), size_(0), compare_() {}
-    ~RBTree() { clear(); }
+    RBTree(): fakeRoot_(new RBNodeBase), size_(0), compare_() {}
+    ~RBTree() { clear(); delete fakeRoot_; }
     void push(const Key& key, const Value& value)
     {
-      RBNodeBase* parent = 0;
+      RBNodeBase* parent = fakeRoot_;
       RBNodeBase* current = root();
       while (current != 0) {
         parent = current;
@@ -66,7 +66,7 @@ namespace muraviev
       }
       Node* node = new Node(key, value);
       node->parent = parent;
-      if (parent == 0) { root_ = node; }
+      if (parent == fakeRoot_) { fakeRoot_->left = node; }
       else if (compare_(key, static_cast< Node* >(parent)->key)) { parent->left = node; }
       else { parent->right = node; }
       ++size_;
@@ -84,7 +84,8 @@ namespace muraviev
     void clear()
     {
       deleteSubtree(root());
-      root_ = 0;
+      fakeRoot_->left = 0;
+      fakeRoot_->right = 0;
       size_ = 0;
     }
     bool valid() const
@@ -92,11 +93,11 @@ namespace muraviev
       return root() == 0 || root()->color == BLACK;
     }
   private:
-    RBNodeBase* root_;
+    RBNodeBase* fakeRoot_;
     size_t size_;
     Compare compare_;
-    RBNodeBase* root() const { return root_; }
-    RBNodeBase* endNode() const { return 0; }
+    RBNodeBase* root() const { return fakeRoot_->left; }
+    RBNodeBase* endNode() const { return fakeRoot_; }
     RBNodeBase* findNode(const Key& key) const
     {
       RBNodeBase* current = root();
