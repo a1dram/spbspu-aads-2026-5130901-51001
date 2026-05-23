@@ -43,3 +43,11 @@ BOOST_AUTO_TEST_CASE(test_commands_drop_wallet_and_wallets_sorted)
       "<w1, w2>\n<w2>\n");
 }
 
+BOOST_AUTO_TEST_CASE(test_commands_transfer_updates_and_rejects_drop)
+{
+  BOOST_TEST(runCommands("make-wallet w1 src 1000\nmake-wallet w2 dst 0\nmake-transfer t1 w1 w2 250\nshow-wallet w1\nshow-wallet w2\nshow-transfer t1\ndrop-wallet w1\n") ==
+      "<ADDRESS: w1, LABEL: src, BALANCE: 750, IN-COUNT: 0, OUT-COUNT: 1, IN-SUM: 0, OUT-SUM: 250>\n"
+      "<ADDRESS: w2, LABEL: dst, BALANCE: 250, IN-COUNT: 1, OUT-COUNT: 0, IN-SUM: 250, OUT-SUM: 0>\n"
+      "<ID: t1, FROM: w1, TO: w2, AMOUNT: 250>\n<INVALID COMMAND>\n");
+}
+

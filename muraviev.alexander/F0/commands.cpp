@@ -58,6 +58,13 @@ namespace
     return true;
   }
 
+  bool dropWalletCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream&)
+  {
+    return muraviev::countTokens(tokens) == 2 &&
+        context.dropWallet(muraviev::tokenAt(tokens, 1));
+  }
+
   bool walletsCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -73,12 +80,24 @@ namespace
     return true;
   }
 
+  bool makeTransferCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream&)
+  {
+    long long amount = 0;
+    return muraviev::countTokens(tokens) == 5 &&
+        muraviev::parsePositiveLongLong(muraviev::tokenAt(tokens, 4), amount) &&
+        context.makeTransfer(muraviev::tokenAt(tokens, 1), muraviev::tokenAt(tokens, 2),
+            muraviev::tokenAt(tokens, 3), amount);
+  }
+
   CommandTable createCommandTable()
   {
     CommandTable commands;
     commands.push("make-wallet", makeWalletCommand);
     commands.push("show-wallet", showWalletCommand);
+    commands.push("drop-wallet", dropWalletCommand);
     commands.push("wallets", walletsCommand);
+    commands.push("make-transfer", makeTransferCommand);
     return commands;
   }
 }
