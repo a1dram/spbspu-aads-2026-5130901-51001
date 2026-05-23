@@ -17,6 +17,12 @@ namespace
   using StringSet = muraviev::RBTree< std::string, bool,
       muraviev::Less< std::string > >;
 
+  struct QueueItem
+  {
+    std::string address;
+    size_t depth;
+  };
+
   void printList(std::ostream& output, const std::vector< std::string >& values)
   {
     if (values.empty()) {
@@ -31,6 +37,28 @@ namespace
       output << values[i];
     }
     output << ">\n";
+  }
+
+  std::vector< std::string > setToVector(const StringSet& set)
+  {
+    std::vector< std::string > result;
+    for (StringSet::const_iterator it = set.cbegin(); it != set.cend(); ++it) {
+      result.push_back(it->key);
+    }
+    return result;
+  }
+
+  std::vector< std::string > outgoing(const muraviev::CommandContext& context,
+      const std::string& address)
+  {
+    StringSet set;
+    for (muraviev::TransferLog::c_iter it = context.transferLog().begin();
+        it != context.transferLog().end(); ++it) {
+      if (it->fromAddress == address) {
+        set.push(it->toAddress, true);
+      }
+    }
+    return setToVector(set);
   }
 
   bool makeWalletCommand(muraviev::CommandContext& context, const Tokens& tokens,
