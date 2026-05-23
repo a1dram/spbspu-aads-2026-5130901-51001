@@ -858,8 +858,30 @@ namespace muraviev
     if ((minKey != nullptr && !compare_(*minKey, typed->key)) ||
         (maxKey != nullptr && !compare_(typed->key, *maxKey))) {
       return -1;
-  };
-  };
+    }
+    if (node->left != nullptr && node->left->parent != node) {
+      return -1;
+    }
+    if (node->right != nullptr && node->right->parent != node) {
+      return -1;
+    }
+    if (node->color == RED &&
+        (colorOf(node->left) == RED || colorOf(node->right) == RED)) {
+      return -1;
+    }
+    const int left = validateSubtree(node->left, minKey, &typed->key);
+    const int right = validateSubtree(node->right, &typed->key, maxKey);
+    if (left < 0 || right < 0 || left != right) {
+      return -1;
+    }
+    return left + (node->color == BLACK ? 1 : 0);
+  }
+
+  template< class Key, class Value, class Compare >
+  RBColor RBTree< Key, Value, Compare >::colorOf(const RBNodeBase* node)
+  {
+    return node == nullptr ? BLACK : node->color;
+  }
 }
 
 #endif
