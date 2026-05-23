@@ -150,3 +150,27 @@ size_t muraviev::CommandContext::nextOrder() const
 {
   return nextOrder_;
 }
+
+bool muraviev::saveContext(const CommandContext& context,
+    const std::string& filename)
+{
+  std::ofstream output(filename.c_str());
+  if (!output) {
+    return false;
+  }
+  output << "WALLETS " << context.wallets().size() << '\n';
+  for (WalletTree::const_iterator it = context.wallets().cbegin();
+      it != context.wallets().cend(); ++it) {
+    const Wallet& wallet = it->value;
+    output << "W " << wallet.address << ' ' << wallet.label << ' '
+        << wallet.balance << ' ' << wallet.inCount << ' ' << wallet.outCount
+        << ' ' << wallet.inSum << ' ' << wallet.outSum << '\n';
+  }
+  output << "TRANSFERS " << context.transfers().size() << '\n';
+  for (TransferLog::c_iter it = context.transferLog().begin();
+      it != context.transferLog().end(); ++it) {
+    output << "T " << it->id << ' ' << it->fromAddress << ' '
+        << it->toAddress << ' ' << it->amount << ' ' << it->order << '\n';
+  }
+  return static_cast< bool >(output);
+}

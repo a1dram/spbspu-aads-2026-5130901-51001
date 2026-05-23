@@ -123,6 +123,17 @@ namespace
     return true;
   }
 
+  bool saveCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    if (muraviev::countTokens(tokens) != 2 ||
+        !muraviev::saveContext(context, muraviev::tokenAt(tokens, 1))) {
+      return false;
+    }
+    output << "<OK>\n";
+    return true;
+  }
+
   CommandTable createCommandTable()
   {
     CommandTable commands;
@@ -133,6 +144,7 @@ namespace
     commands.push("make-transfer", makeTransferCommand);
     commands.push("show-transfer", showTransferCommand);
     commands.push("transfers", transfersCommand);
+    commands.push("save", saveCommand);
     return commands;
   }
 }
