@@ -428,6 +428,187 @@ namespace muraviev
 
   template< class Key, class Value, class Compare >
   Value RBTree< Key, Value, Compare >::drop(const Key& key)
+  {
+    RBNodeBase* removed = findNode(key);
+    if (removed == nullptr) {
+      throw std::out_of_range("key not found");
+    }
+    Value result = static_cast< Node* >(removed)->value;
+    RBNodeBase* y = removed;
+    RBColor originalColor = y->color;
+    RBNodeBase* x = nullptr;
+    RBNodeBase* xParent = nullptr;
+    if (removed->left == nullptr) {
+      x = removed->right;
+      xParent = removed->parent;
+      transplant(removed, removed->right);
+    } else if (removed->right == nullptr) {
+      x = removed->left;
+      xParent = removed->parent;
+      transplant(removed, removed->left);
+    } else {
+      y = getMin(removed->right);
+      originalColor = y->color;
+      x = y->right;
+      if (y->parent == removed) {
+        xParent = y;
+        if (x != nullptr) {
+          x->parent = y;
+        }
+      } else {
+        xParent = y->parent;
+        transplant(y, y->right);
+        y->right = removed->right;
+        y->right->parent = y;
+      }
+      transplant(removed, y);
+      y->left = removed->left;
+      y->left->parent = y;
+      y->color = removed->color;
+    }
+    delete static_cast< Node* >(removed);
+    --size_;
+    if (originalColor == BLACK) {
+      fixDrop(x, xParent);
+    }
+    if (root() != nullptr) {
+      root()->color = BLACK;
+    }
+    return result;
+  }
+
+  template< class Key, class Value, class Compare >
+  bool RBTree< Key, Value, Compare >::contains(const Key& key) const
+  {
+    return findNode(key) != nullptr;
+  }
+
+  template< class Key, class Value, class Compare >
+  bool RBTree< Key, Value, Compare >::empty() const
+  {
+    return size_ == 0;
+  }
+
+  template< class Key, class Value, class Compare >
+  size_t RBTree< Key, Value, Compare >::size() const
+  {
+    return size_;
+  }
+
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::clear()
+  {
+    deleteSubtree(root());
+    fakeRoot_->left = nullptr;
+    fakeRoot_->right = nullptr;
+    fakeRoot_->parent = nullptr;
+    size_ = 0;
+  }
+
+  template< class Key, class Value, class Compare >
+  typename RBTree< Key, Value, Compare >::iterator
+  RBTree< Key, Value, Compare >::begin()
+  {
+    RBNodeBase* first = getMin(root());
+    return iterator(first == nullptr ? fakeRoot_ : first, fakeRoot_);
+  }
+
+  template< class Key, class Value, class Compare >
+  typename RBTree< Key, Value, Compare >::iterator
+  RBTree< Key, Value, Compare >::end()
+  {
+    return iterator(fakeRoot_, fakeRoot_);
+  }
+
+  template< class Key, class Value, class Compare >
+  typename RBTree< Key, Value, Compare >::const_iterator
+  RBTree< Key, Value, Compare >::begin() const
+  {
+    return cbegin();
+  }
+
+  template< class Key, class Value, class Compare >
+  typename RBTree< Key, Value, Compare >::const_iterator
+  RBTree< Key, Value, Compare >::end() const
+  {
+    return cend();
+  }
+
+  template< class Key, class Value, class Compare >
+  typename RBTree< Key, Value, Compare >::const_iterator
+  RBTree< Key, Value, Compare >::cbegin() const
+  {
+    const RBNodeBase* first = getMin(root());
+    return const_iterator(first == nullptr ? fakeRoot_ : first, fakeRoot_);
+  }
+
+  template< class Key, class Value, class Compare >
+  typename RBTree< Key, Value, Compare >::const_iterator
+  RBTree< Key, Value, Compare >::cend() const
+  {
+    return const_iterator(fakeRoot_, fakeRoot_);
+  }
+
+  template< class Key, class Value, class Compare >
+  bool RBTree< Key, Value, Compare >::valid() const
+  {
+    if (root() == nullptr) {
+      return size_ == 0;
+    }
+    if (root()->color != BLACK || root()->parent != fakeRoot_) {
+      return false;
+    }
+    return validateSubtree(root(), nullptr, nullptr) >= 0;
+  }
+
+  template< class Key, class Value, class Compare >
+  RBNodeBase* RBTree< Key, Value, Compare >::root() const
+  {
+    return fakeRoot_->left;
+  }
+
+  template< class Key, class Value, class Compare >
+  RBNodeBase* RBTree< Key, Value, Compare >::findNode(const Key& key) const
+  {
+    RBNodeBase* current = root();
+    while (current != nullptr) {
+      Node* node = static_cast< Node* >(current);
+      if (compare_(key, node->key)) {
+        current = current->left;
+      } else if (compare_(node->key, key)) {
+        current = current->right;
+      } else {
+        return current;
+      }
+    }
+    return nullptr;
+  }
+
+  template< class Key, class Value, class Compare >
+  RBNodeBase* RBTree< Key, Value, Compare >::getMin(RBNodeBase* node) const
+  {
+    if (node == nullptr) {
+      return nullptr;
+    }
+    while (node->left != nullptr) {
+      node = node->left;
+    }
+    return node;
+  }
+
+  template< class Key, class Value, class Compare >
+  const RBNodeBase* RBTree< Key, Value, Compare >::getMin(
+      const RBNodeBase* node) const
+  {
+    if (node == nullptr) {
+      return nullptr;
+    }
+    while (node->left != nullptr) {
+      node = node->left;
+    }
+    return node;
+  }
+
 }
 
 #endif
