@@ -82,6 +82,37 @@ namespace muraviev
       RBNodeBase* node_;
       RBNodeBase* end_;
     };
+    class const_iterator
+    {
+    public:
+      const_iterator(): node_(0), end_(0) {}
+      const_iterator(const iterator& other): node_(other.node_), end_(other.end_) {}
+      const Node& operator*() const { return *static_cast< const Node* >(node_); }
+      const Node* operator->() const { return static_cast< const Node* >(node_); }
+      const_iterator& operator++()
+      {
+        if (node_ == 0 || node_ == end_) { return *this; }
+        if (node_->right != 0) {
+          node_ = node_->right;
+          while (node_->left != 0) { node_ = node_->left; }
+          return *this;
+        }
+        const RBNodeBase* parent = node_->parent;
+        while (parent != 0 && parent != end_ && node_ == parent->right) {
+          node_ = parent;
+          parent = parent->parent;
+        }
+        node_ = parent == 0 ? end_ : parent;
+        return *this;
+      }
+      bool operator==(const const_iterator& other) const { return node_ == other.node_ && end_ == other.end_; }
+      bool operator!=(const const_iterator& other) const { return !(*this == other); }
+    private:
+      friend class RBTree;
+      const_iterator(const RBNodeBase* node, const RBNodeBase* end): node_(node), end_(end) {}
+      const RBNodeBase* node_;
+      const RBNodeBase* end_;
+    };
     RBTree(): fakeRoot_(new RBNodeBase), size_(0), compare_() {}
     ~RBTree() { clear(); delete fakeRoot_; }
     void push(const Key& key, const Value& value)
@@ -109,6 +140,12 @@ namespace muraviev
       if (node == 0) { throw std::out_of_range("key not found"); }
       return static_cast< Node* >(node)->value;
     }
+    const Value& get(const Key& key) const
+    {
+      const RBNodeBase* node = findNode(key);
+      if (node == 0) { throw std::out_of_range("key not found"); }
+      return static_cast< const Node* >(node)->value;
+    }
     bool contains(const Key& key) const { return findNode(key) != 0; }
     bool empty() const { return size_ == 0; }
     size_t size() const { return size_; }
@@ -121,6 +158,10 @@ namespace muraviev
     }
     iterator begin() { RBNodeBase* first = getMin(root()); return iterator(first == 0 ? endNode() : first, endNode()); }
     iterator end() { return iterator(endNode(), endNode()); }
+    const_iterator begin() const { return cbegin(); }
+    const_iterator end() const { return cend(); }
+    const_iterator cbegin() const { const RBNodeBase* first = getMin(root()); return const_iterator(first == 0 ? endNode() : first, endNode()); }
+    const_iterator cend() const { return const_iterator(endNode(), endNode()); }
     bool valid() const
     {
       return root() == 0 || root()->color == BLACK;
@@ -143,6 +184,12 @@ namespace muraviev
       return 0;
     }
     RBNodeBase* getMin(RBNodeBase* node) const
+    {
+      if (node == 0) { return 0; }
+      while (node->left != 0) { node = node->left; }
+      return node;
+    }
+    const RBNodeBase* getMin(const RBNodeBase* node) const
     {
       if (node == 0) { return 0; }
       while (node->left != 0) { node = node->left; }
