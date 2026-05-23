@@ -29,3 +29,9 @@ BOOST_AUTO_TEST_CASE(test_rb_tree_order_iteration)
   for (TestTree::iterator it = tree.begin(); it != tree.end(); ++it) { BOOST_TEST(it->key == expected); ++expected; }
   BOOST_TEST(expected == 4);
 }
+
+BOOST_AUTO_TEST_CASE(test_rb_tree_insert_many_needs_rotations)
+{
+  TestTree tree; for (int i = 1; i <= 20; ++i) { tree.push(i, std::to_string(i)); BOOST_TEST(tree.valid()); }
+  BOOST_TEST(tree.size() == 20);
+}

@@ -195,6 +195,30 @@ namespace muraviev
       while (node->left != 0) { node = node->left; }
       return node;
     }
+    void rotateLeft(RBNodeBase* node)
+    {
+      RBNodeBase* right = node->right;
+      node->right = right->left;
+      if (right->left != 0) { right->left->parent = node; }
+      right->parent = node->parent;
+      if (node->parent == endNode()) { fakeRoot_->left = right; }
+      else if (node == node->parent->left) { node->parent->left = right; }
+      else { node->parent->right = right; }
+      right->left = node;
+      node->parent = right;
+    }
+    void rotateRight(RBNodeBase* node)
+    {
+      RBNodeBase* left = node->left;
+      node->left = left->right;
+      if (left->right != 0) { left->right->parent = node; }
+      left->parent = node->parent;
+      if (node->parent == endNode()) { fakeRoot_->left = left; }
+      else if (node == node->parent->right) { node->parent->right = left; }
+      else { node->parent->left = left; }
+      left->right = node;
+      node->parent = left;
+    }
     void deleteSubtree(RBNodeBase* node)
     {
       if (node == 0) { return; }
