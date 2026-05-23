@@ -89,3 +89,16 @@ bool muraviev::CommandContext::addWallet(const std::string& address,
   wallets_.push(address, Wallet(address, label, balance));
   return true;
 }
+
+bool muraviev::CommandContext::dropWallet(const std::string& address)
+{
+  if (!wallets_.contains(address)) {
+    return false;
+  }
+  const Wallet& wallet = wallets_.get(address);
+  if (wallet.inCount != 0 || wallet.outCount != 0) {
+    return false;
+  }
+  wallets_.drop(address);
+  return true;
+}
