@@ -150,9 +150,10 @@ namespace muraviev
     {
       RBNodeBase* removed = findNode(key);
       if (removed == 0) { throw std::out_of_range("key not found"); }
-      if (removed->left != 0 || removed->right != 0) { throw std::out_of_range("node is not leaf"); }
+      if (removed->left != 0 && removed->right != 0) { throw std::out_of_range("node has two children"); }
       Value result = static_cast< Node* >(removed)->value;
-      transplant(removed, 0);
+      RBNodeBase* child = removed->left != 0 ? removed->left : removed->right;
+      transplant(removed, child);
       delete static_cast< Node* >(removed);
       --size_;
       if (root() != 0) { root()->color = BLACK; }

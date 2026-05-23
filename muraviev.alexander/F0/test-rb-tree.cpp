@@ -36,8 +36,9 @@ BOOST_AUTO_TEST_CASE(test_rb_tree_insert_many_needs_rotations)
   BOOST_TEST(tree.size() == 20);
 }
 
-BOOST_AUTO_TEST_CASE(test_rb_tree_remove_leaf)
+BOOST_AUTO_TEST_CASE(test_rb_tree_remove_leaf_and_one_child)
 {
   TestTree tree; for (int i = 1; i <= 4; ++i) { tree.push(i, std::to_string(i)); }
-  BOOST_TEST(tree.drop(4) == "4"); BOOST_CHECK_THROW(tree.drop(2), std::out_of_range);
+  BOOST_TEST(tree.drop(4) == "4"); BOOST_TEST(tree.drop(3) == "3");
+  BOOST_CHECK_THROW(tree.drop(2), std::out_of_range);
 }
