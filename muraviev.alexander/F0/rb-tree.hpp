@@ -27,6 +27,7 @@ namespace muraviev
   {
   public:
     RBTree(): root_(0), size_(0) {}
+    ~RBTree() { clear(); }
     void push(const Key& key, const Value& value)
     {
       RBNode< Key, Value >* parent = 0;
@@ -60,6 +61,12 @@ namespace muraviev
       if (node == 0) { throw std::out_of_range("key not found"); }
       return node->value;
     }
+    void clear()
+    {
+      deleteSubtree(root_);
+      root_ = 0;
+      size_ = 0;
+    }
     bool empty() const { return size_ == 0; }
     size_t size() const { return size_; }
     bool contains(const Key& key) const { return findNode(key) != 0; }
@@ -68,6 +75,13 @@ namespace muraviev
     RBNode< Key, Value >* root_;
     size_t size_;
     Compare compare_;
+    void deleteSubtree(RBNode< Key, Value >* node)
+    {
+      if (node == 0) { return; }
+      deleteSubtree(node->left);
+      deleteSubtree(node->right);
+      delete node;
+    }
     RBNode< Key, Value >* findNode(const Key& key) const
     {
       RBNode< Key, Value >* current = root_;
