@@ -132,7 +132,7 @@ namespace muraviev
       else if (compare_(key, static_cast< Node* >(parent)->key)) { parent->left = node; }
       else { parent->right = node; }
       ++size_;
-      root()->color = BLACK;
+      fixInsert(node);
     }
     Value& get(const Key& key)
     {
@@ -218,6 +218,24 @@ namespace muraviev
       else { node->parent->left = left; }
       left->right = node;
       node->parent = left;
+    }
+    RBColor colorOf(const RBNodeBase* node) const { return node == 0 ? BLACK : node->color; }
+    void fixInsert(RBNodeBase* node)
+    {
+      while (node->parent != endNode() && node->parent->color == RED) {
+        RBNodeBase* parent = node->parent;
+        RBNodeBase* grand = parent->parent;
+        if (parent == grand->left) {
+          RBNodeBase* uncle = grand->right;
+          if (colorOf(uncle) == RED) { parent->color = BLACK; uncle->color = BLACK; grand->color = RED; node = grand; }
+          else { if (node == parent->right) { node = parent; rotateLeft(node); parent = node->parent; grand = parent->parent; } parent->color = BLACK; grand->color = RED; rotateRight(grand); }
+        } else {
+          RBNodeBase* uncle = grand->left;
+          if (colorOf(uncle) == RED) { parent->color = BLACK; uncle->color = BLACK; grand->color = RED; node = grand; }
+          else { if (node == parent->left) { node = parent; rotateRight(node); parent = node->parent; grand = parent->parent; } parent->color = BLACK; grand->color = RED; rotateLeft(grand); }
+        }
+      }
+      root()->color = BLACK;
     }
     void deleteSubtree(RBNodeBase* node)
     {
