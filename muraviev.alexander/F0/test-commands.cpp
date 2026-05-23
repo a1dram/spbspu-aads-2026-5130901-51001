@@ -37,3 +37,9 @@ BOOST_AUTO_TEST_CASE(test_commands_make_wallet_show_wallet_and_duplicate)
       "<INVALID COMMAND>\n");
 }
 
+BOOST_AUTO_TEST_CASE(test_commands_drop_wallet_and_wallets_sorted)
+{
+  BOOST_TEST(runCommands("make-wallet w2 b 0\nmake-wallet w1 a 0\nwallets\ndrop-wallet w1\nwallets\n") ==
+      "<w1, w2>\n<w2>\n");
+}
+

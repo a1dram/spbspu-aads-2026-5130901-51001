@@ -17,6 +17,22 @@ namespace
   using StringSet = muraviev::RBTree< std::string, bool,
       muraviev::Less< std::string > >;
 
+  void printList(std::ostream& output, const std::vector< std::string >& values)
+  {
+    if (values.empty()) {
+      output << "<NOTHING FOUND>\n";
+      return;
+    }
+    output << '<';
+    for (size_t i = 0; i < values.size(); ++i) {
+      if (i != 0) {
+        output << ", ";
+      }
+      output << values[i];
+    }
+    output << ">\n";
+  }
+
   bool makeWalletCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream&)
   {
@@ -27,10 +43,42 @@ namespace
             balance);
   }
 
+  bool showWalletCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    if (muraviev::countTokens(tokens) != 2 ||
+        !context.wallets().contains(muraviev::tokenAt(tokens, 1))) {
+      return false;
+    }
+    const muraviev::Wallet& wallet = context.wallets().get(muraviev::tokenAt(tokens, 1));
+    output << "<ADDRESS: " << wallet.address << ", LABEL: " << wallet.label
+        << ", BALANCE: " << wallet.balance << ", IN-COUNT: " << wallet.inCount
+        << ", OUT-COUNT: " << wallet.outCount << ", IN-SUM: " << wallet.inSum
+        << ", OUT-SUM: " << wallet.outSum << ">\n";
+    return true;
+  }
+
+  bool walletsCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    if (muraviev::countTokens(tokens) != 1) {
+      return false;
+    }
+    std::vector< std::string > addresses;
+    for (muraviev::WalletTree::const_iterator it = context.wallets().cbegin();
+        it != context.wallets().cend(); ++it) {
+      addresses.push_back(it->key);
+    }
+    printList(output, addresses);
+    return true;
+  }
+
   CommandTable createCommandTable()
   {
     CommandTable commands;
     commands.push("make-wallet", makeWalletCommand);
+    commands.push("show-wallet", showWalletCommand);
+    commands.push("wallets", walletsCommand);
     return commands;
   }
 }
