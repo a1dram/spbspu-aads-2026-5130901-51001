@@ -43,3 +43,11 @@ BOOST_AUTO_TEST_CASE(test_rb_tree_remove_leaf_one_child_two_children)
   BOOST_TEST(tree.drop(4) == "4"); BOOST_CHECK_THROW(tree.drop(100), std::out_of_range);
   BOOST_TEST(tree.valid());
 }
+
+BOOST_AUTO_TEST_CASE(test_rb_tree_copy_assignment_move_and_clear)
+{
+  TestTree tree; tree.push(2, "two"); tree.push(1, "one"); tree.push(3, "three");
+  TestTree copy(tree); TestTree assigned; assigned = tree; TestTree moved(static_cast< TestTree&& >(tree));
+  BOOST_TEST(copy.get(1) == "one"); BOOST_TEST(assigned.get(3) == "three"); BOOST_TEST(moved.size() == 3);
+  assigned.clear(); BOOST_TEST(assigned.empty());
+}

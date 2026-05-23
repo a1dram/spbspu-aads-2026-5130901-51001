@@ -114,6 +114,15 @@ namespace muraviev
       const RBNodeBase* end_;
     };
     RBTree(): fakeRoot_(new RBNodeBase), size_(0), compare_() {}
+    RBTree(const RBTree& other): fakeRoot_(new RBNodeBase), size_(other.size_), compare_(other.compare_)
+    {
+      fakeRoot_->left = cloneSubtree(other.root(), fakeRoot_);
+    }
+    RBTree& operator=(const RBTree& other)
+    {
+      if (this != &other) { RBTree tmp(other); swap(tmp); }
+      return *this;
+    }
     ~RBTree() { clear(); delete fakeRoot_; }
     void push(const Key& key, const Value& value)
     {
@@ -270,6 +279,23 @@ namespace muraviev
       deleteSubtree(node->left);
       deleteSubtree(node->right);
       delete static_cast< Node* >(node);
+    }
+    RBNodeBase* cloneSubtree(const RBNodeBase* node, RBNodeBase* parent)
+    {
+      if (node == 0) { return 0; }
+      const Node* source = static_cast< const Node* >(node);
+      Node* copy = new Node(source->key, source->value);
+      copy->color = source->color;
+      copy->parent = parent;
+      copy->left = cloneSubtree(node->left, copy);
+      copy->right = cloneSubtree(node->right, copy);
+      return copy;
+    }
+    void swap(RBTree& other)
+    {
+      RBNodeBase* tmpRoot = fakeRoot_; fakeRoot_ = other.fakeRoot_; other.fakeRoot_ = tmpRoot;
+      size_t tmpSize = size_; size_ = other.size_; other.size_ = tmpSize;
+      Compare tmpCompare = compare_; compare_ = other.compare_; other.compare_ = tmpCompare;
     }
     int validateSubtree(const RBNodeBase* node, const Key* minKey, const Key* maxKey) const
     {
