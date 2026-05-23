@@ -146,6 +146,18 @@ namespace muraviev
       if (node == 0) { throw std::out_of_range("key not found"); }
       return static_cast< const Node* >(node)->value;
     }
+    Value drop(const Key& key)
+    {
+      RBNodeBase* removed = findNode(key);
+      if (removed == 0) { throw std::out_of_range("key not found"); }
+      if (removed->left != 0 || removed->right != 0) { throw std::out_of_range("node is not leaf"); }
+      Value result = static_cast< Node* >(removed)->value;
+      transplant(removed, 0);
+      delete static_cast< Node* >(removed);
+      --size_;
+      if (root() != 0) { root()->color = BLACK; }
+      return result;
+    }
     bool contains(const Key& key) const { return findNode(key) != 0; }
     bool empty() const { return size_ == 0; }
     size_t size() const { return size_; }
@@ -238,6 +250,13 @@ namespace muraviev
         }
       }
       root()->color = BLACK;
+    }
+    void transplant(RBNodeBase* oldNode, RBNodeBase* newNode)
+    {
+      if (oldNode->parent == endNode()) { fakeRoot_->left = newNode; }
+      else if (oldNode == oldNode->parent->left) { oldNode->parent->left = newNode; }
+      else { oldNode->parent->right = newNode; }
+      if (newNode != 0) { newNode->parent = oldNode->parent; }
     }
     void deleteSubtree(RBNodeBase* node)
     {
