@@ -308,6 +308,126 @@ namespace muraviev
   {}
 
   template< class Key, class Value, class Compare >
+  RBTree< Key, Value, Compare >::RBTree():
+    fakeRoot_(new RBNodeBase),
+    size_(0),
+    compare_()
+  {}
+
+  template< class Key, class Value, class Compare >
+  RBTree< Key, Value, Compare >::RBTree(const RBTree& other):
+    fakeRoot_(new RBNodeBase),
+    size_(other.size_),
+    compare_(other.compare_)
+  {
+    try {
+      fakeRoot_->left = cloneSubtree(other.fakeRoot_->left, fakeRoot_);
+    } catch (...) {
+      deleteSubtree(fakeRoot_->left);
+      delete fakeRoot_;
+      fakeRoot_ = nullptr;
+      throw;
+    }
+  }
+
+  template< class Key, class Value, class Compare >
+  RBTree< Key, Value, Compare >::RBTree(RBTree&& other):
+    fakeRoot_(other.fakeRoot_),
+    size_(other.size_),
+    compare_(other.compare_)
+  {
+    other.fakeRoot_ = new RBNodeBase;
+    other.size_ = 0;
+  }
+
+  template< class Key, class Value, class Compare >
+  RBTree< Key, Value, Compare >&
+  RBTree< Key, Value, Compare >::operator=(const RBTree& other)
+  {
+    if (this == &other) {
+      return *this;
+    }
+    RBTree tmp(other);
+    swap(tmp);
+    return *this;
+  }
+
+  template< class Key, class Value, class Compare >
+  RBTree< Key, Value, Compare >&
+  RBTree< Key, Value, Compare >::operator=(RBTree&& other)
+  {
+    if (this == &other) {
+      return *this;
+    }
+    clear();
+    delete fakeRoot_;
+    fakeRoot_ = other.fakeRoot_;
+    size_ = other.size_;
+    compare_ = other.compare_;
+    other.fakeRoot_ = new RBNodeBase;
+    other.size_ = 0;
+    return *this;
+  }
+
+  template< class Key, class Value, class Compare >
+  RBTree< Key, Value, Compare >::~RBTree()
+  {
+    clear();
+    delete fakeRoot_;
+  }
+
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::push(const Key& key, const Value& value)
+  {
+    RBNodeBase* parent = fakeRoot_;
+    RBNodeBase* current = root();
+    while (current != nullptr) {
+      parent = current;
+      Node* node = static_cast< Node* >(current);
+      if (compare_(key, node->key)) {
+        current = current->left;
+      } else if (compare_(node->key, key)) {
+        current = current->right;
+      } else {
+        node->value = value;
+        return;
+      }
+    }
+    Node* node = new Node(key, value);
+    node->parent = parent;
+    if (parent == fakeRoot_) {
+      fakeRoot_->left = node;
+    } else if (compare_(key, static_cast< Node* >(parent)->key)) {
+      parent->left = node;
+    } else {
+      parent->right = node;
+    }
+    ++size_;
+    fixInsert(node);
+  }
+
+  template< class Key, class Value, class Compare >
+  Value& RBTree< Key, Value, Compare >::get(const Key& key)
+  {
+    RBNodeBase* node = findNode(key);
+    if (node == nullptr) {
+      throw std::out_of_range("key not found");
+    }
+    return static_cast< Node* >(node)->value;
+  }
+
+  template< class Key, class Value, class Compare >
+  const Value& RBTree< Key, Value, Compare >::get(const Key& key) const
+  {
+    const RBNodeBase* node = findNode(key);
+    if (node == nullptr) {
+      throw std::out_of_range("key not found");
+    }
+    return static_cast< const Node* >(node)->value;
+  }
+
+  template< class Key, class Value, class Compare >
+  Value RBTree< Key, Value, Compare >::drop(const Key& key)
 }
 
 #endif
