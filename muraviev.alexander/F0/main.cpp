@@ -1,13 +1,16 @@
+#include <exception>
 #include <iostream>
-#include <string>
+
+#include "commands.hpp"
 
 int main()
 {
-  std::string line;
-  while (std::getline(std::cin, line)) {
-    if (!line.empty()) {
-      std::cout << "<INVALID COMMAND>\n";
-    }
+  try {
+    muraviev::CommandContext context;
+    muraviev::executeCommands(std::cin, std::cout, context);
+  } catch (const std::exception& error) {
+    std::cerr << error.what() << '\n';
+    return 1;
   }
   return 0;
 }
