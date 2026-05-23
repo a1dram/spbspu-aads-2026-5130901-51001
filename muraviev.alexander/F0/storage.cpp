@@ -174,3 +174,85 @@ bool muraviev::saveContext(const CommandContext& context,
   }
   return static_cast< bool >(output);
 }
+
+bool muraviev::loadContext(CommandContext& context, const std::string& filename)
+{
+  std::ifstream input(filename.c_str());
+  if (!input) {
+    return false;
+  }
+
+  CommandContext loaded;
+  std::string line;
+  TokenList tokens;
+  size_t walletCount = 0;
+  size_t transferCount = 0;
+  if (!std::getline(input, line) || !splitStrictSpaces(line, tokens) ||
+      countTokens(tokens) != 2 || tokenAt(tokens, 0) != "WALLETS" ||
+      !parseNonNegativeSize(tokenAt(tokens, 1), walletCount)) {
+    return false;
+  }
+
+  for (size_t i = 0; i < walletCount; ++i) {
+    long long balance = 0;
+    long long inSum = 0;
+    long long outSum = 0;
+    size_t inCount = 0;
+    size_t outCount = 0;
+    if (!std::getline(input, line) || !splitStrictSpaces(line, tokens) ||
+        countTokens(tokens) != 8 || tokenAt(tokens, 0) != "W" ||
+        loaded.wallets().contains(tokenAt(tokens, 1)) ||
+        !parseNonNegativeLongLong(tokenAt(tokens, 3), balance) ||
+        !parseNonNegativeSize(tokenAt(tokens, 4), inCount) ||
+        !parseNonNegativeSize(tokenAt(tokens, 5), outCount) ||
+        !parseNonNegativeLongLong(tokenAt(tokens, 6), inSum) ||
+        !parseNonNegativeLongLong(tokenAt(tokens, 7), outSum)) {
+      return false;
+    }
+    Wallet wallet(tokenAt(tokens, 1), tokenAt(tokens, 2), balance);
+    wallet.inCount = inCount;
+    wallet.outCount = outCount;
+    wallet.inSum = inSum;
+    wallet.outSum = outSum;
+    loaded.wallets().push(wallet.address, wallet);
+  }
+
+  if (!std::getline(input, line) || !splitStrictSpaces(line, tokens) ||
+      countTokens(tokens) != 2 || tokenAt(tokens, 0) != "TRANSFERS" ||
+      !parseNonNegativeSize(tokenAt(tokens, 1), transferCount)) {
+    return false;
+  }
+
+  size_t maxOrder = 0;
+  for (size_t i = 0; i < transferCount; ++i) {
+    long long amount = 0;
+    size_t order = 0;
+    if (!std::getline(input, line) || !splitStrictSpaces(line, tokens) ||
+        countTokens(tokens) != 6 || tokenAt(tokens, 0) != "T" ||
+        loaded.transfers().contains(tokenAt(tokens, 1)) ||
+        !loaded.wallets().contains(tokenAt(tokens, 2)) ||
+        !loaded.wallets().contains(tokenAt(tokens, 3)) ||
+        tokenAt(tokens, 2) == tokenAt(tokens, 3) ||
+        !parsePositiveLongLong(tokenAt(tokens, 4), amount) ||
+        !parsePositiveSize(tokenAt(tokens, 5), order)) {
+      return false;
+    }
+    const Transfer transfer(tokenAt(tokens, 1), tokenAt(tokens, 2),
+        tokenAt(tokens, 3), amount, order);
+    loaded.transfers().push(transfer.id, transfer);
+    if (loaded.transferLog().empty()) {
+      loaded.transferLog().pushFront(transfer);
+    } else {
+      loaded.transferLog().insert(loaded.transferLog().last(), transfer);
+    }
+    if (order > maxOrder) {
+      maxOrder = order;
+    }
+  }
+  if (std::getline(input, line)) {
+    return false;
+  }
+  loaded.setNextOrder(maxOrder + 1);
+  context = loaded;
+  return true;
+}
