@@ -164,7 +164,9 @@ namespace muraviev
     const_iterator cend() const { return const_iterator(endNode(), endNode()); }
     bool valid() const
     {
-      return root() == 0 || root()->color == BLACK;
+      if (root() == 0) { return size_ == 0; }
+      if (root()->color != BLACK) { return false; }
+      return validateSubtree(root(), 0, 0) >= 0;
     }
   private:
     RBNodeBase* fakeRoot_;
@@ -243,6 +245,19 @@ namespace muraviev
       deleteSubtree(node->left);
       deleteSubtree(node->right);
       delete static_cast< Node* >(node);
+    }
+    int validateSubtree(const RBNodeBase* node, const Key* minKey, const Key* maxKey) const
+    {
+      if (node == 0) { return 1; }
+      const Node* typed = static_cast< const Node* >(node);
+      if ((minKey != 0 && !compare_(*minKey, typed->key)) || (maxKey != 0 && !compare_(typed->key, *maxKey))) { return -1; }
+      if (node->left != 0 && node->left->parent != node) { return -1; }
+      if (node->right != 0 && node->right->parent != node) { return -1; }
+      if (node->color == RED && ((node->left != 0 && node->left->color == RED) || (node->right != 0 && node->right->color == RED))) { return -1; }
+      int left = validateSubtree(node->left, minKey, &typed->key);
+      int right = validateSubtree(node->right, &typed->key, maxKey);
+      if (left < 0 || right < 0 || left != right) { return -1; }
+      return left + (node->color == BLACK ? 1 : 0);
     }
   };
 
