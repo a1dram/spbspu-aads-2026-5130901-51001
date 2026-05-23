@@ -717,8 +717,148 @@ namespace muraviev
       RBNodeBase* parent)
   {
     while (node != root() && colorOf(node) == BLACK) {
-      if (parent == nullptr || parent == fakeRoot_) {};
-    };
+      if (parent == nullptr || parent == fakeRoot_) {
+        break;
+      }
+      if (node == parent->left) {
+        RBNodeBase* brother = parent->right;
+        if (colorOf(brother) == RED) {
+          brother->color = BLACK;
+          parent->color = RED;
+          rotateLeft(parent);
+          brother = parent->right;
+        }
+        if (colorOf(brother == nullptr ? nullptr : brother->left) == BLACK &&
+            colorOf(brother == nullptr ? nullptr : brother->right) == BLACK) {
+          if (brother != nullptr) {
+            brother->color = RED;
+          }
+          node = parent;
+          parent = node->parent;
+        } else {
+          if (colorOf(brother == nullptr ? nullptr : brother->right) == BLACK) {
+            if (brother != nullptr && brother->left != nullptr) {
+              brother->left->color = BLACK;
+            }
+            if (brother != nullptr) {
+              brother->color = RED;
+              rotateRight(brother);
+            }
+            brother = parent->right;
+          }
+          if (brother != nullptr) {
+            brother->color = parent->color;
+          }
+          parent->color = BLACK;
+          if (brother != nullptr && brother->right != nullptr) {
+            brother->right->color = BLACK;
+          }
+          rotateLeft(parent);
+          node = root();
+          parent = fakeRoot_;
+        }
+      } else {
+        RBNodeBase* brother = parent->left;
+        if (colorOf(brother) == RED) {
+          brother->color = BLACK;
+          parent->color = RED;
+          rotateRight(parent);
+          brother = parent->left;
+        }
+        if (colorOf(brother == nullptr ? nullptr : brother->right) == BLACK &&
+            colorOf(brother == nullptr ? nullptr : brother->left) == BLACK) {
+          if (brother != nullptr) {
+            brother->color = RED;
+          }
+          node = parent;
+          parent = node->parent;
+        } else {
+          if (colorOf(brother == nullptr ? nullptr : brother->left) == BLACK) {
+            if (brother != nullptr && brother->right != nullptr) {
+              brother->right->color = BLACK;
+            }
+            if (brother != nullptr) {
+              brother->color = RED;
+              rotateLeft(brother);
+            }
+            brother = parent->left;
+          }
+          if (brother != nullptr) {
+            brother->color = parent->color;
+          }
+          parent->color = BLACK;
+          if (brother != nullptr && brother->left != nullptr) {
+            brother->left->color = BLACK;
+          }
+          rotateRight(parent);
+          node = root();
+          parent = fakeRoot_;
+        }
+      }
+    }
+    if (node != nullptr) {
+      node->color = BLACK;
+    }
+  }
+
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::deleteSubtree(RBNodeBase* node)
+  {
+    if (node == nullptr) {
+      return;
+    }
+    deleteSubtree(node->left);
+    deleteSubtree(node->right);
+    delete static_cast< Node* >(node);
+  }
+
+  template< class Key, class Value, class Compare >
+  RBNodeBase* RBTree< Key, Value, Compare >::cloneSubtree(
+      const RBNodeBase* node, RBNodeBase* parent)
+  {
+    if (node == nullptr) {
+      return nullptr;
+    }
+    const Node* source = static_cast< const Node* >(node);
+    Node* copy = new Node(source->key, source->value);
+    copy->color = source->color;
+    copy->parent = parent;
+    try {
+      copy->left = cloneSubtree(node->left, copy);
+      copy->right = cloneSubtree(node->right, copy);
+    } catch (...) {
+      deleteSubtree(copy);
+      throw;
+    }
+    return copy;
+  }
+
+  template< class Key, class Value, class Compare >
+  void RBTree< Key, Value, Compare >::swap(RBTree& other)
+  {
+    RBNodeBase* tmpRoot = fakeRoot_;
+    fakeRoot_ = other.fakeRoot_;
+    other.fakeRoot_ = tmpRoot;
+    const size_t tmpSize = size_;
+    size_ = other.size_;
+    other.size_ = tmpSize;
+    const Compare tmpCompare = compare_;
+    compare_ = other.compare_;
+    other.compare_ = tmpCompare;
+  }
+
+  template< class Key, class Value, class Compare >
+  int RBTree< Key, Value, Compare >::validateSubtree(const RBNodeBase* node,
+      const Key* minKey, const Key* maxKey) const
+  {
+    if (node == nullptr) {
+      return 1;
+    }
+    const Node* typed = static_cast< const Node* >(node);
+    if ((minKey != nullptr && !compare_(*minKey, typed->key)) ||
+        (maxKey != nullptr && !compare_(typed->key, *maxKey))) {
+      return -1;
+  };
   };
 }
 
