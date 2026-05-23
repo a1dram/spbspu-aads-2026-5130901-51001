@@ -102,3 +102,33 @@ bool muraviev::CommandContext::dropWallet(const std::string& address)
   wallets_.drop(address);
   return true;
 }
+
+bool muraviev::CommandContext::makeTransfer(const std::string& id,
+    const std::string& from, const std::string& to, long long amount)
+{
+  if (transfers_.contains(id) || !wallets_.contains(from) ||
+      !wallets_.contains(to) || amount <= 0 || from == to) {
+    return false;
+  }
+  Wallet& source = wallets_.get(from);
+  Wallet& target = wallets_.get(to);
+  if (source.balance < amount) {
+    return false;
+  }
+  source.balance -= amount;
+  source.outCount += 1;
+  source.outSum += amount;
+  target.balance += amount;
+  target.inCount += 1;
+  target.inSum += amount;
+
+  const Transfer transfer(id, from, to, amount, nextOrder_);
+  transfers_.push(id, transfer);
+  if (transferLog_.empty()) {
+    transferLog_.pushFront(transfer);
+  } else {
+    transferLog_.insert(transferLog_.last(), transfer);
+  }
+  ++nextOrder_;
+  return true;
+}
