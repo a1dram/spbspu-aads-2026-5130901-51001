@@ -51,3 +51,9 @@ BOOST_AUTO_TEST_CASE(test_commands_transfer_updates_and_rejects_drop)
       "<ID: t1, FROM: w1, TO: w2, AMOUNT: 250>\n<INVALID COMMAND>\n");
 }
 
+BOOST_AUTO_TEST_CASE(test_commands_invalid_arguments_and_numbers)
+{
+  BOOST_TEST(runCommands("make-wallet w1 main -1\nmake-wallet w1 main 1 extra\nmake-wallet w1 main 1\nmake-transfer t1 w1 w1 1\nmake-transfer t2 w1 w1 abc\nwallets extra\n") ==
+      "<INVALID COMMAND>\n<INVALID COMMAND>\n<INVALID COMMAND>\n<INVALID COMMAND>\n<INVALID COMMAND>\n");
+}
+

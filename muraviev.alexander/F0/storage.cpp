@@ -132,3 +132,21 @@ bool muraviev::CommandContext::makeTransfer(const std::string& id,
   ++nextOrder_;
   return true;
 }
+
+void muraviev::CommandContext::clear()
+{
+  wallets_.clear();
+  transfers_.clear();
+  transferLog_.clear();
+  nextOrder_ = 1;
+}
+
+void muraviev::CommandContext::setNextOrder(size_t order)
+{
+  nextOrder_ = order;
+}
+
+size_t muraviev::CommandContext::nextOrder() const
+{
+  return nextOrder_;
+}
