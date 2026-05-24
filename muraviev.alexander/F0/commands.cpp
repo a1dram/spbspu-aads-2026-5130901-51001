@@ -484,6 +484,18 @@ namespace
         muraviev::loadContext(context, muraviev::tokenAt(tokens, 1));
   }
 
+  void collectFirstBranches(const muraviev::CommandContext& context,
+      const std::string& source, std::vector< FlowState >& states)
+  {
+    for (muraviev::TransferLog::c_iter it = context.transferLog().begin();
+        it != context.transferLog().end(); ++it) {
+      if (it->fromAddress == source) {
+        states.push_back({it->toAddress, it->toAddress, 1, it->amount, -1,
+            it->fromAddress, it->toAddress, it->order, it->amount});
+      }
+    }
+  }
+
   bool detectLaundryCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -497,7 +509,42 @@ namespace
         !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 3), top)) {
       return false;
     }
-    output << "<NOTHING FOUND>\n";
+    std::vector< LaundryInfo > schemes;
+    for (muraviev::WalletTree::const_iterator it = context.wallets().cbegin();
+        it != context.wallets().cend(); ++it) {
+      std::vector< FlowState > states;
+      collectFirstBranches(context, it->key, states);
+      for (muraviev::WalletTree::const_iterator wallet = context.wallets().cbegin();
+          wallet != context.wallets().cend(); ++wallet) {
+        if (wallet->key == it->key) { continue; }
+        StringSet branches;
+        long long reached = 0;
+        size_t depth = 0;
+        std::vector< FlowEdge > edges;
+        for (size_t j = 0; j < states.size(); ++j) {
+          if (states[j].wallet == wallet->key && states[j].amount > 0) {
+            branches.push(states[j].branch, true);
+            reached += states[j].amount;
+            if (states[j].depth > depth) { depth = states[j].depth; }
+          }
+        }
+        if (branches.size() >= minBranches) {
+          const long long score = reached * static_cast< long long >(branches.size()) +
+              static_cast< long long >(depth) * 4000;
+          schemes.push_back({it->key, wallet->key, branches.size(), depth, reached,
+              score, edges});
+        }
+      }
+    }
+    if (schemes.empty()) { output << "<NOTHING FOUND>\n"; return true; }
+    const size_t count = top < schemes.size() ? top : schemes.size();
+    for (size_t i = 0; i < count; ++i) {
+      output << "<CASE: " << (i + 1) << ", SOURCE: " << schemes[i].source
+          << ", TARGET: " << schemes[i].target << ", SCORE: "
+          << schemes[i].score << ">\n";
+      output << "<BRANCHES: " << schemes[i].branches << ", DEPTH: "
+          << schemes[i].depth << ", REACHED: " << schemes[i].reached << ">\n";
+    }
     return true;
   }
 
