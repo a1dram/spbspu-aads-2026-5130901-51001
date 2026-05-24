@@ -242,6 +242,38 @@ namespace
     return true;
   }
 
+  bool sinksCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    size_t maxDepth = 0;
+    if (muraviev::countTokens(tokens) != 3 ||
+        !context.wallets().contains(muraviev::tokenAt(tokens, 1)) ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 2), maxDepth)) {
+      return false;
+    }
+    const std::string start = muraviev::tokenAt(tokens, 1);
+    StringSet visited;
+    StringSet result;
+    std::vector< QueueItem > queue;
+    visited.push(start, true);
+    queue.push_back({start, 0});
+    for (size_t head = 0; head < queue.size(); ++head) {
+      if (queue[head].depth == maxDepth) {
+        continue;
+      }
+      const std::vector< std::string > next = outgoing(context, queue[head].address);
+      for (size_t i = 0; i < next.size(); ++i) {
+        if (!visited.contains(next[i])) {
+          visited.push(next[i], true);
+          result.push(next[i], true);
+          queue.push_back({next[i], queue[head].depth + 1});
+        }
+      }
+    }
+    printList(output, setToVector(result));
+    return true;
+  }
+
   bool saveCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -272,6 +304,7 @@ namespace
     commands.push("transfers", transfersCommand);
     commands.push("path", pathCommand);
     commands.push("related", relatedCommand);
+    commands.push("sinks", sinksCommand);
     commands.push("save", saveCommand);
     commands.push("load", loadCommand);
     return commands;
