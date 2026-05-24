@@ -199,6 +199,49 @@ namespace
     return true;
   }
 
+  bool relatedCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    if (muraviev::countTokens(tokens) != 2 ||
+        !context.wallets().contains(muraviev::tokenAt(tokens, 1))) {
+      return false;
+    }
+    const std::string& address = muraviev::tokenAt(tokens, 1);
+    StringSet in;
+    StringSet out;
+    for (muraviev::TransferLog::c_iter it = context.transferLog().begin();
+        it != context.transferLog().end(); ++it) {
+      if (it->toAddress == address) {
+        in.push(it->fromAddress, true);
+      }
+      if (it->fromAddress == address) {
+        out.push(it->toAddress, true);
+      }
+    }
+    const std::vector< std::string > inList = setToVector(in);
+    const std::vector< std::string > outList = setToVector(out);
+    if (inList.empty() && outList.empty()) {
+      output << "<NOTHING FOUND>\n";
+      return true;
+    }
+    output << "<IN: ";
+    for (size_t i = 0; i < inList.size(); ++i) {
+      if (i != 0) {
+        output << ", ";
+      }
+      output << inList[i];
+    }
+    output << "; OUT: ";
+    for (size_t i = 0; i < outList.size(); ++i) {
+      if (i != 0) {
+        output << ", ";
+      }
+      output << outList[i];
+    }
+    output << ">\n";
+    return true;
+  }
+
   bool saveCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -228,6 +271,7 @@ namespace
     commands.push("show-transfer", showTransferCommand);
     commands.push("transfers", transfersCommand);
     commands.push("path", pathCommand);
+    commands.push("related", relatedCommand);
     commands.push("save", saveCommand);
     commands.push("load", loadCommand);
     return commands;
