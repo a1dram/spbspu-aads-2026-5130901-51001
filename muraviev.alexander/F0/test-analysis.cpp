@@ -42,3 +42,18 @@ BOOST_AUTO_TEST_CASE(test_analysis_detect_cycles_unique)
       "<CASE: 1, LENGTH: 3>\n<w1 -> w2 -> w3 -> w1>\n");
 }
 
+BOOST_AUTO_TEST_CASE(test_analysis_detect_laundry_example)
+{
+  BOOST_TEST(runAnalysis(
+      "make-wallet w1 src 50000\nmake-wallet w2 a1 0\nmake-wallet w3 a2 0\nmake-wallet w4 a3 0\n"
+      "make-wallet w5 m1 0\nmake-wallet w8 m2 0\nmake-wallet w9 dst 0\n"
+      "make-transfer t1 w1 w2 5000\nmake-transfer t2 w1 w3 7000\nmake-transfer t3 w1 w4 6000\n"
+      "make-transfer t4 w2 w5 5000\nmake-transfer t5 w3 w5 4000\nmake-transfer t6 w4 w8 6000\n"
+      "make-transfer t7 w5 w9 9000\nmake-transfer t8 w8 w9 6000\ndetect-laundry 3 3 1\n") ==
+      "<CASE: 1, SOURCE: w1, TARGET: w9, SCORE: 57000>\n"
+      "<BRANCHES: 3, DEPTH: 3, REACHED: 15000>\n"
+      "<w1 -> w2 : 5000>\n<w1 -> w3 : 7000>\n<w1 -> w4 : 6000>\n"
+      "<w2 -> w5 : 5000>\n<w3 -> w5 : 4000>\n<w4 -> w8 : 6000>\n"
+      "<w5 -> w9 : 9000>\n<w8 -> w9 : 6000>\n");
+}
+
