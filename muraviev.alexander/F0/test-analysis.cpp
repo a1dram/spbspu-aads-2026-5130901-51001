@@ -33,3 +33,12 @@ BOOST_AUTO_TEST_CASE(test_analysis_path_no_path_and_invalid_cycles)
       "<NOTHING FOUND>\n<INVALID COMMAND>\n");
 }
 
+BOOST_AUTO_TEST_CASE(test_analysis_detect_cycles_unique)
+{
+  BOOST_TEST(runAnalysis(
+      "make-wallet w1 a 100\nmake-wallet w2 b 0\nmake-wallet w3 c 0\n"
+      "make-transfer t1 w1 w2 10\nmake-transfer t2 w2 w3 5\nmake-transfer t3 w3 w1 1\n"
+      "detect-cycles 3 5\n") ==
+      "<CASE: 1, LENGTH: 3>\n<w1 -> w2 -> w3 -> w1>\n");
+}
+
