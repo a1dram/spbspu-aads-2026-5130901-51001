@@ -187,6 +187,127 @@ namespace
     return lhs.key < rhs.key;
   }
 
+  void addFlowEdge(std::vector< FlowEdge >& edges, const std::string& from,
+      const std::string& to, long long amount, size_t order)
+  {
+    for (size_t i = 0; i < edges.size(); ++i) {
+      if (edges[i].from == from && edges[i].to == to) {
+        edges[i].amount += amount;
+        return;
+      }
+    }
+    edges.push_back({from, to, amount, order});
+  }
+
+  bool flowEdgeLess(const FlowEdge& lhs, const FlowEdge& rhs)
+  {
+    return lhs.order < rhs.order;
+  }
+
+  std::vector< FlowEdge > collectSchemeEdges(const std::vector< FlowState >& states,
+      const std::string& target)
+  {
+    std::vector< FlowEdge > result;
+    StringSet firstEdges;
+    for (size_t i = 0; i < states.size(); ++i) {
+      if (states[i].wallet != target || states[i].amount <= 0) {
+        continue;
+      }
+      int current = static_cast< int >(i);
+      while (current >= 0) {
+        if (states[current].parent < 0) {
+          const std::string key = states[current].edgeFrom + '\n' +
+              states[current].edgeTo;
+          if (!firstEdges.contains(key)) {
+            firstEdges.push(key, true);
+            addFlowEdge(result, states[current].edgeFrom, states[current].edgeTo,
+                states[current].edgeAmount, states[current].edgeOrder);
+          }
+        } else {
+          addFlowEdge(result, states[current].edgeFrom, states[current].edgeTo,
+              states[i].amount, states[current].edgeOrder);
+        }
+        current = states[current].parent;
+      }
+    }
+    std::sort(result.begin(), result.end(), flowEdgeLess);
+    return result;
+  }
+
+  bool laundryLess(const LaundryInfo& lhs, const LaundryInfo& rhs)
+  {
+    if (lhs.score != rhs.score) {
+      return lhs.score > rhs.score;
+    }
+    if (lhs.reached != rhs.reached) {
+      return lhs.reached > rhs.reached;
+    }
+    if (lhs.branches != rhs.branches) {
+      return lhs.branches > rhs.branches;
+    }
+    if (lhs.source != rhs.source) {
+      return lhs.source < rhs.source;
+    }
+    return lhs.target < rhs.target;
+  }
+
+  void collectLaundryForSource(const muraviev::CommandContext& context,
+      const std::string& source, size_t maxDepth, size_t minBranches,
+      std::vector< LaundryInfo >& result)
+  {
+    std::vector< FlowState > states;
+    for (muraviev::TransferLog::c_iter it = context.transferLog().begin();
+        it != context.transferLog().end(); ++it) {
+      if (it->fromAddress == source) {
+        states.push_back({it->toAddress, it->toAddress, 1, it->amount, -1,
+            it->fromAddress, it->toAddress, it->order, it->amount});
+      } else {
+        long long remaining = it->amount;
+        const size_t statesCount = states.size();
+        for (size_t i = 0; i < statesCount && remaining > 0; ++i) {
+          if (states[i].wallet == it->fromAddress && states[i].amount > 0 &&
+              states[i].depth < maxDepth) {
+            const long long moved = states[i].amount < remaining ?
+                states[i].amount : remaining;
+            const std::string branch = states[i].branch;
+            const size_t nextDepth = states[i].depth + 1;
+            states[i].amount -= moved;
+            remaining -= moved;
+            states.push_back({it->toAddress, branch, nextDepth, moved,
+                static_cast< int >(i), it->fromAddress, it->toAddress,
+                it->order, moved});
+          }
+        }
+      }
+    }
+
+    for (muraviev::WalletTree::const_iterator wallet = context.wallets().cbegin();
+        wallet != context.wallets().cend(); ++wallet) {
+      if (wallet->key == source) {
+        continue;
+      }
+      StringSet branches;
+      long long reached = 0;
+      size_t depth = 0;
+      for (size_t i = 0; i < states.size(); ++i) {
+        if (states[i].wallet == wallet->key && states[i].amount > 0) {
+          branches.push(states[i].branch, true);
+          reached += states[i].amount;
+          if (states[i].depth > depth) {
+            depth = states[i].depth;
+          }
+        }
+      }
+      if (branches.size() >= minBranches) {
+        const long long score = reached * static_cast< long long >(branches.size()) +
+            static_cast< long long >(depth) * 4000;
+        const std::vector< FlowEdge > edges = collectSchemeEdges(states, wallet->key);
+        result.push_back({source, wallet->key, branches.size(), depth, reached,
+            score, edges});
+      }
+    }
+  }
+
   bool makeWalletCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream&)
   {
@@ -466,6 +587,45 @@ namespace
     return true;
   }
 
+  bool detectLaundryCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    size_t maxDepth = 0;
+    size_t minBranches = 0;
+    size_t top = 0;
+    if (muraviev::countTokens(tokens) != 4 ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 1), maxDepth) ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 2), minBranches) ||
+        minBranches < 2 ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 3), top)) {
+      return false;
+    }
+    std::vector< LaundryInfo > schemes;
+    for (muraviev::WalletTree::const_iterator it = context.wallets().cbegin();
+        it != context.wallets().cend(); ++it) {
+      collectLaundryForSource(context, it->key, maxDepth, minBranches, schemes);
+    }
+    std::sort(schemes.begin(), schemes.end(), laundryLess);
+    if (schemes.empty()) {
+      output << "<NOTHING FOUND>\n";
+      return true;
+    }
+    const size_t count = top < schemes.size() ? top : schemes.size();
+    for (size_t i = 0; i < count; ++i) {
+      output << "<CASE: " << (i + 1) << ", SOURCE: " << schemes[i].source
+          << ", TARGET: " << schemes[i].target << ", SCORE: "
+          << schemes[i].score << ">\n";
+      output << "<BRANCHES: " << schemes[i].branches << ", DEPTH: "
+          << schemes[i].depth << ", REACHED: " << schemes[i].reached << ">\n";
+      for (size_t j = 0; j < schemes[i].edges.size(); ++j) {
+        output << '<' << schemes[i].edges[j].from << " -> "
+            << schemes[i].edges[j].to << " : " << schemes[i].edges[j].amount
+            << ">\n";
+      }
+    }
+    return true;
+  }
+
   bool saveCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -484,116 +644,6 @@ namespace
         muraviev::loadContext(context, muraviev::tokenAt(tokens, 1));
   }
 
-  void collectFirstBranches(const muraviev::CommandContext& context,
-      const std::string& source, std::vector< FlowState >& states)
-  {
-    for (muraviev::TransferLog::c_iter it = context.transferLog().begin();
-        it != context.transferLog().end(); ++it) {
-      if (it->fromAddress == source) {
-        states.push_back({it->toAddress, it->toAddress, 1, it->amount, -1,
-            it->fromAddress, it->toAddress, it->order, it->amount});
-      }
-    }
-  }
-
-  void propagateLaundryStates(const muraviev::CommandContext& context,
-      size_t maxDepth, std::vector< FlowState >& states)
-  {
-    for (muraviev::TransferLog::c_iter it = context.transferLog().begin();
-        it != context.transferLog().end(); ++it) {
-      long long remaining = it->amount;
-      const size_t statesCount = states.size();
-      for (size_t i = 0; i < statesCount && remaining > 0; ++i) {
-        if (states[i].wallet == it->fromAddress && states[i].depth < maxDepth) {
-          const long long moved = states[i].amount < remaining ? states[i].amount : remaining;
-          states[i].amount -= moved;
-          remaining -= moved;
-          states.push_back({it->toAddress, states[i].branch, states[i].depth + 1,
-              moved, static_cast< int >(i), it->fromAddress, it->toAddress,
-              it->order, moved});
-        }
-      }
-    }
-  }
-
-  bool simpleLaundryLess(const LaundryInfo& lhs, const LaundryInfo& rhs)
-  {
-    if (lhs.score != rhs.score) { return lhs.score > rhs.score; }
-    if (lhs.source != rhs.source) { return lhs.source < rhs.source; }
-    return lhs.target < rhs.target;
-  }
-
-  void addSimpleLaundryEdge(std::vector< FlowEdge >& edges, const FlowState& state)
-  {
-    for (size_t i = 0; i < edges.size(); ++i) {
-      if (edges[i].from == state.edgeFrom && edges[i].to == state.edgeTo) {
-        edges[i].amount += state.edgeAmount;
-        return;
-      }
-    }
-    edges.push_back({state.edgeFrom, state.edgeTo, state.edgeAmount, state.edgeOrder});
-  }
-
-  bool detectLaundryCommand(muraviev::CommandContext& context, const Tokens& tokens,
-      std::ostream& output)
-  {
-    size_t maxDepth = 0;
-    size_t minBranches = 0;
-    size_t top = 0;
-    if (muraviev::countTokens(tokens) != 4 ||
-        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 1), maxDepth) ||
-        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 2), minBranches) ||
-        minBranches < 2 ||
-        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 3), top)) {
-      return false;
-    }
-    std::vector< LaundryInfo > schemes;
-    for (muraviev::WalletTree::const_iterator it = context.wallets().cbegin();
-        it != context.wallets().cend(); ++it) {
-      std::vector< FlowState > states;
-      collectFirstBranches(context, it->key, states);
-      propagateLaundryStates(context, maxDepth, states);
-      for (muraviev::WalletTree::const_iterator wallet = context.wallets().cbegin();
-          wallet != context.wallets().cend(); ++wallet) {
-        if (wallet->key == it->key) { continue; }
-        StringSet branches;
-        long long reached = 0;
-        size_t depth = 0;
-        std::vector< FlowEdge > edges;
-        for (size_t j = 0; j < states.size(); ++j) {
-          if (states[j].wallet == wallet->key && states[j].amount > 0) {
-            branches.push(states[j].branch, true);
-            reached += states[j].amount;
-            if (states[j].depth > depth) { depth = states[j].depth; }
-            addSimpleLaundryEdge(edges, states[j]);
-          }
-        }
-        if (branches.size() >= minBranches) {
-          const long long score = reached * static_cast< long long >(branches.size()) +
-              static_cast< long long >(depth) * 4000;
-          schemes.push_back({it->key, wallet->key, branches.size(), depth, reached,
-              score, edges});
-        }
-      }
-    }
-    std::sort(schemes.begin(), schemes.end(), simpleLaundryLess);
-    if (schemes.empty()) { output << "<NOTHING FOUND>\n"; return true; }
-    const size_t count = top < schemes.size() ? top : schemes.size();
-    for (size_t i = 0; i < count; ++i) {
-      output << "<CASE: " << (i + 1) << ", SOURCE: " << schemes[i].source
-          << ", TARGET: " << schemes[i].target << ", SCORE: "
-          << schemes[i].score << ">\n";
-      output << "<BRANCHES: " << schemes[i].branches << ", DEPTH: "
-          << schemes[i].depth << ", REACHED: " << schemes[i].reached << ">\n";
-      for (size_t j = 0; j < schemes[i].edges.size(); ++j) {
-        output << '<' << schemes[i].edges[j].from << " -> "
-            << schemes[i].edges[j].to << " : " << schemes[i].edges[j].amount
-            << ">\n";
-      }
-    }
-    return true;
-  }
-
   CommandTable createCommandTable()
   {
     CommandTable commands;
@@ -609,9 +659,9 @@ namespace
     commands.push("sinks", sinksCommand);
     commands.push("top-wallets", topWalletsCommand);
     commands.push("detect-cycles", detectCyclesCommand);
+    commands.push("detect-laundry", detectLaundryCommand);
     commands.push("save", saveCommand);
     commands.push("load", loadCommand);
-    commands.push("detect-laundry", detectLaundryCommand);
     return commands;
   }
 }
