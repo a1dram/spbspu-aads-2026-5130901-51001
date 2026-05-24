@@ -23,6 +23,12 @@ namespace
     size_t depth;
   };
 
+  struct WalletRank
+  {
+    std::string address;
+    long long balance;
+  };
+
   void printList(std::ostream& output, const std::vector< std::string >& values)
   {
     if (values.empty()) {
@@ -59,6 +65,14 @@ namespace
       }
     }
     return setToVector(set);
+  }
+
+  bool walletRankLess(const WalletRank& lhs, const WalletRank& rhs)
+  {
+    if (lhs.balance != rhs.balance) {
+      return lhs.balance > rhs.balance;
+    }
+    return lhs.address < rhs.address;
   }
 
   bool makeWalletCommand(muraviev::CommandContext& context, const Tokens& tokens,
@@ -274,6 +288,32 @@ namespace
     return true;
   }
 
+  bool topWalletsCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    size_t top = 0;
+    if (muraviev::countTokens(tokens) != 2 ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 1), top)) {
+      return false;
+    }
+    std::vector< WalletRank > ranks;
+    for (muraviev::WalletTree::const_iterator it = context.wallets().cbegin();
+        it != context.wallets().cend(); ++it) {
+      ranks.push_back({it->key, it->value.balance});
+    }
+    std::sort(ranks.begin(), ranks.end(), walletRankLess);
+    if (ranks.empty()) {
+      output << "<NOTHING FOUND>\n";
+      return true;
+    }
+    const size_t count = top < ranks.size() ? top : ranks.size();
+    for (size_t i = 0; i < count; ++i) {
+      output << "<CASE: " << (i + 1) << ", ADDRESS: " << ranks[i].address
+          << ", BALANCE: " << ranks[i].balance << ">\n";
+    }
+    return true;
+  }
+
   bool saveCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -305,6 +345,7 @@ namespace
     commands.push("path", pathCommand);
     commands.push("related", relatedCommand);
     commands.push("sinks", sinksCommand);
+    commands.push("top-wallets", topWalletsCommand);
     commands.push("save", saveCommand);
     commands.push("load", loadCommand);
     return commands;
