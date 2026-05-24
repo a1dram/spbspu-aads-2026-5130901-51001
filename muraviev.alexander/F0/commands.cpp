@@ -35,6 +35,38 @@ namespace
     std::string key;
   };
 
+  struct FlowState
+  {
+    std::string wallet;
+    std::string branch;
+    size_t depth;
+    long long amount;
+    int parent;
+    std::string edgeFrom;
+    std::string edgeTo;
+    size_t edgeOrder;
+    long long edgeAmount;
+  };
+
+  struct FlowEdge
+  {
+    std::string from;
+    std::string to;
+    long long amount;
+    size_t order;
+  };
+
+  struct LaundryInfo
+  {
+    std::string source;
+    std::string target;
+    size_t branches;
+    size_t depth;
+    long long reached;
+    long long score;
+    std::vector< FlowEdge > edges;
+  };
+
   void printList(std::ostream& output, const std::vector< std::string >& values)
   {
     if (values.empty()) {
