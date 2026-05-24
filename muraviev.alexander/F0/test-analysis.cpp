@@ -57,3 +57,9 @@ BOOST_AUTO_TEST_CASE(test_analysis_detect_laundry_example)
       "<w5 -> w9 : 9000>\n<w8 -> w9 : 6000>\n");
 }
 
+BOOST_AUTO_TEST_CASE(test_analysis_empty_results_are_reported)
+{
+  BOOST_TEST(runAnalysis("wallets\nmake-wallet w1 a 1\ntransfers w1\nrelated w1\nsinks w1 1\ndetect-cycles 3 1\ndetect-laundry 3 2 1\n") ==
+      "<NOTHING FOUND>\n<NOTHING FOUND>\n<NOTHING FOUND>\n<NOTHING FOUND>\n<NOTHING FOUND>\n<NOTHING FOUND>\n");
+}
+
