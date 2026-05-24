@@ -29,6 +29,12 @@ namespace
     long long balance;
   };
 
+  struct CycleInfo
+  {
+    std::vector< std::string > path;
+    std::string key;
+  };
+
   void printList(std::ostream& output, const std::vector< std::string >& values)
   {
     if (values.empty()) {
@@ -73,6 +79,80 @@ namespace
       return lhs.balance > rhs.balance;
     }
     return lhs.address < rhs.address;
+  }
+
+  std::string joinCycleKey(const std::vector< std::string >& cycle)
+  {
+    std::ostringstream output;
+    for (size_t i = 0; i < cycle.size(); ++i) {
+      if (i != 0) {
+        output << '\n';
+      }
+      output << cycle[i];
+    }
+    return output.str();
+  }
+
+  std::vector< std::string > canonicalCycle(const std::vector< std::string >& path)
+  {
+    std::vector< std::string > cycle(path.begin(), path.end() - 1);
+    size_t best = 0;
+    for (size_t i = 1; i < cycle.size(); ++i) {
+      for (size_t j = 0; j < cycle.size(); ++j) {
+        const std::string& left = cycle[(i + j) % cycle.size()];
+        const std::string& right = cycle[(best + j) % cycle.size()];
+        if (left < right) {
+          best = i;
+          break;
+        }
+        if (right < left) {
+          break;
+        }
+      }
+    }
+    std::vector< std::string > result;
+    for (size_t i = 0; i < cycle.size(); ++i) {
+      result.push_back(cycle[(best + i) % cycle.size()]);
+    }
+    result.push_back(result[0]);
+    return result;
+  }
+
+  void searchCycles(const muraviev::CommandContext& context,
+      const std::string& start, const std::string& current, size_t maxDepth,
+      std::vector< std::string >& path, StringSet& used, StringSet& seen,
+      std::vector< CycleInfo >& cycles)
+  {
+    if (path.size() > maxDepth) {
+      return;
+    }
+    const std::vector< std::string > next = outgoing(context, current);
+    for (size_t i = 0; i < next.size(); ++i) {
+      if (next[i] == start && path.size() >= 2) {
+        path.push_back(start);
+        const std::vector< std::string > canonical = canonicalCycle(path);
+        const std::string key = joinCycleKey(canonical);
+        if (!seen.contains(key)) {
+          seen.push(key, true);
+          cycles.push_back({canonical, key});
+        }
+        path.pop_back();
+      } else if (!used.contains(next[i]) && path.size() < maxDepth) {
+        used.push(next[i], true);
+        path.push_back(next[i]);
+        searchCycles(context, start, next[i], maxDepth, path, used, seen, cycles);
+        path.pop_back();
+        used.drop(next[i]);
+      }
+    }
+  }
+
+  bool cycleLess(const CycleInfo& lhs, const CycleInfo& rhs)
+  {
+    if (lhs.path.size() != rhs.path.size()) {
+      return lhs.path.size() < rhs.path.size();
+    }
+    return lhs.key < rhs.key;
   }
 
   bool makeWalletCommand(muraviev::CommandContext& context, const Tokens& tokens,
@@ -314,6 +394,46 @@ namespace
     return true;
   }
 
+  bool detectCyclesCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    size_t maxDepth = 0;
+    size_t top = 0;
+    if (muraviev::countTokens(tokens) != 3 ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 1), maxDepth) ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 2), top)) {
+      return false;
+    }
+    StringSet seen;
+    std::vector< CycleInfo > cycles;
+    for (muraviev::WalletTree::const_iterator it = context.wallets().cbegin();
+        it != context.wallets().cend(); ++it) {
+      std::vector< std::string > path;
+      StringSet used;
+      path.push_back(it->key);
+      used.push(it->key, true);
+      searchCycles(context, it->key, it->key, maxDepth, path, used, seen, cycles);
+    }
+    std::sort(cycles.begin(), cycles.end(), cycleLess);
+    if (cycles.empty()) {
+      output << "<NOTHING FOUND>\n";
+      return true;
+    }
+    const size_t count = top < cycles.size() ? top : cycles.size();
+    for (size_t i = 0; i < count; ++i) {
+      output << "<CASE: " << (i + 1) << ", LENGTH: "
+          << (cycles[i].path.size() - 1) << ">\n<";
+      for (size_t j = 0; j < cycles[i].path.size(); ++j) {
+        if (j != 0) {
+          output << " -> ";
+        }
+        output << cycles[i].path[j];
+      }
+      output << ">\n";
+    }
+    return true;
+  }
+
   bool saveCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -346,6 +466,7 @@ namespace
     commands.push("related", relatedCommand);
     commands.push("sinks", sinksCommand);
     commands.push("top-wallets", topWalletsCommand);
+    commands.push("detect-cycles", detectCyclesCommand);
     commands.push("save", saveCommand);
     commands.push("load", loadCommand);
     return commands;

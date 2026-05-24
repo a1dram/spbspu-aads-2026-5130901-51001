@@ -27,3 +27,9 @@ BOOST_AUTO_TEST_CASE(test_analysis_path_related_sinks_and_top)
       "<CASE: 1, ADDRESS: w1, BALANCE: 80>\n<CASE: 2, ADDRESS: w3, BALANCE: 10>\n");
 }
 
+BOOST_AUTO_TEST_CASE(test_analysis_path_no_path_and_invalid_cycles)
+{
+  BOOST_TEST(runAnalysis("make-wallet w1 a 1\nmake-wallet w2 b 1\npath w2 w1\ndetect-cycles 0 1\n") ==
+      "<NOTHING FOUND>\n<INVALID COMMAND>\n");
+}
+
