@@ -516,6 +516,13 @@ namespace
     }
   }
 
+  bool simpleLaundryLess(const LaundryInfo& lhs, const LaundryInfo& rhs)
+  {
+    if (lhs.score != rhs.score) { return lhs.score > rhs.score; }
+    if (lhs.source != rhs.source) { return lhs.source < rhs.source; }
+    return lhs.target < rhs.target;
+  }
+
   bool detectLaundryCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -557,6 +564,7 @@ namespace
         }
       }
     }
+    std::sort(schemes.begin(), schemes.end(), simpleLaundryLess);
     if (schemes.empty()) { output << "<NOTHING FOUND>\n"; return true; }
     const size_t count = top < schemes.size() ? top : schemes.size();
     for (size_t i = 0; i < count; ++i) {
