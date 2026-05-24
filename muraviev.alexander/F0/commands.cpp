@@ -523,6 +523,17 @@ namespace
     return lhs.target < rhs.target;
   }
 
+  void addSimpleLaundryEdge(std::vector< FlowEdge >& edges, const FlowState& state)
+  {
+    for (size_t i = 0; i < edges.size(); ++i) {
+      if (edges[i].from == state.edgeFrom && edges[i].to == state.edgeTo) {
+        edges[i].amount += state.edgeAmount;
+        return;
+      }
+    }
+    edges.push_back({state.edgeFrom, state.edgeTo, state.edgeAmount, state.edgeOrder});
+  }
+
   bool detectLaundryCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -554,6 +565,7 @@ namespace
             branches.push(states[j].branch, true);
             reached += states[j].amount;
             if (states[j].depth > depth) { depth = states[j].depth; }
+            addSimpleLaundryEdge(edges, states[j]);
           }
         }
         if (branches.size() >= minBranches) {
@@ -573,6 +585,11 @@ namespace
           << schemes[i].score << ">\n";
       output << "<BRANCHES: " << schemes[i].branches << ", DEPTH: "
           << schemes[i].depth << ", REACHED: " << schemes[i].reached << ">\n";
+      for (size_t j = 0; j < schemes[i].edges.size(); ++j) {
+        output << '<' << schemes[i].edges[j].from << " -> "
+            << schemes[i].edges[j].to << " : " << schemes[i].edges[j].amount
+            << ">\n";
+      }
     }
     return true;
   }
