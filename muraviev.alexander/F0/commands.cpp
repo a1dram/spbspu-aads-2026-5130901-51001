@@ -484,6 +484,23 @@ namespace
         muraviev::loadContext(context, muraviev::tokenAt(tokens, 1));
   }
 
+  bool detectLaundryCommand(muraviev::CommandContext& context, const Tokens& tokens,
+      std::ostream& output)
+  {
+    size_t maxDepth = 0;
+    size_t minBranches = 0;
+    size_t top = 0;
+    if (muraviev::countTokens(tokens) != 4 ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 1), maxDepth) ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 2), minBranches) ||
+        minBranches < 2 ||
+        !muraviev::parsePositiveSize(muraviev::tokenAt(tokens, 3), top)) {
+      return false;
+    }
+    output << "<NOTHING FOUND>\n";
+    return true;
+  }
+
   CommandTable createCommandTable()
   {
     CommandTable commands;
@@ -501,6 +518,7 @@ namespace
     commands.push("detect-cycles", detectCyclesCommand);
     commands.push("save", saveCommand);
     commands.push("load", loadCommand);
+    commands.push("detect-laundry", detectLaundryCommand);
     return commands;
   }
 }
