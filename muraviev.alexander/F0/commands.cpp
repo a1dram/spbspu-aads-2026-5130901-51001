@@ -496,6 +496,26 @@ namespace
     }
   }
 
+  void propagateLaundryStates(const muraviev::CommandContext& context,
+      size_t maxDepth, std::vector< FlowState >& states)
+  {
+    for (muraviev::TransferLog::c_iter it = context.transferLog().begin();
+        it != context.transferLog().end(); ++it) {
+      long long remaining = it->amount;
+      const size_t statesCount = states.size();
+      for (size_t i = 0; i < statesCount && remaining > 0; ++i) {
+        if (states[i].wallet == it->fromAddress && states[i].depth < maxDepth) {
+          const long long moved = states[i].amount < remaining ? states[i].amount : remaining;
+          states[i].amount -= moved;
+          remaining -= moved;
+          states.push_back({it->toAddress, states[i].branch, states[i].depth + 1,
+              moved, static_cast< int >(i), it->fromAddress, it->toAddress,
+              it->order, moved});
+        }
+      }
+    }
+  }
+
   bool detectLaundryCommand(muraviev::CommandContext& context, const Tokens& tokens,
       std::ostream& output)
   {
@@ -514,6 +534,7 @@ namespace
         it != context.wallets().cend(); ++it) {
       std::vector< FlowState > states;
       collectFirstBranches(context, it->key, states);
+      propagateLaundryStates(context, maxDepth, states);
       for (muraviev::WalletTree::const_iterator wallet = context.wallets().cbegin();
           wallet != context.wallets().cend(); ++wallet) {
         if (wallet->key == it->key) { continue; }
