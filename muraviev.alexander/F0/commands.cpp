@@ -17,6 +17,42 @@ namespace
   using StringSet = muraviev::RBTree< std::string, bool,
       muraviev::Less< std::string > >;
 
+  struct HelpInfo
+  {
+    std::string usage;
+    std::string description;
+    std::string parameters;
+    std::string example;
+    std::string result;
+    std::string fileFormat;
+    std::string notes;
+
+    HelpInfo():
+      usage(),
+      description(),
+      parameters(),
+      example(),
+      result(),
+      fileFormat(),
+      notes()
+    {}
+
+    HelpInfo(const std::string& commandUsage, const std::string& commandDescription,
+        const std::string& commandParameters, const std::string& commandExample,
+        const std::string& commandResult, const std::string& commandNotes):
+      usage(commandUsage),
+      description(commandDescription),
+      parameters(commandParameters),
+      example(commandExample),
+      result(commandResult),
+      fileFormat(),
+      notes(commandNotes)
+    {}
+  };
+
+  using HelpTable = muraviev::RBTree< std::string, HelpInfo,
+      muraviev::Less< std::string > >;
+
   struct QueueItem
   {
     std::string address;
@@ -652,10 +688,253 @@ namespace
         muraviev::loadContext(context, muraviev::tokenAt(tokens, 1));
   }
 
+  HelpTable createHelpTable()
+  {
+    HelpTable help;
+    help.push("make-wallet", HelpInfo(
+        "make-wallet <address> <label> <balance>",
+        "Creates a wallet with a unique address and an initial balance.",
+        "address   Unique wallet address.\n"
+        "  label     Wallet name.\n"
+        "  balance   Non-negative initial balance.",
+        "make-wallet w1 main 1000",
+        "(no output on success)",
+        "Duplicate addresses and negative balances are rejected."));
+    help.push("show-wallet", HelpInfo(
+        "show-wallet <address>",
+        "Displays wallet information, balance and transfer statistics.",
+        "address   Address of an existing wallet.",
+        "make-wallet w1 main 1000\n"
+        "  show-wallet w1",
+        "<ADDRESS: w1, LABEL: main, BALANCE: 1000, IN-COUNT: 0,\n"
+        "  OUT-COUNT: 0, IN-SUM: 0, OUT-SUM: 0>",
+        "A missing wallet is rejected."));
+    help.push("drop-wallet", HelpInfo(
+        "drop-wallet <address>",
+        "Deletes an existing wallet without transfer history.",
+        "address   Address of the wallet to delete.",
+        "make-wallet w1 main 1000\n"
+        "  drop-wallet w1",
+        "(no output on success)",
+        "A wallet with incoming or outgoing transfers cannot be deleted."));
+    help.push("wallets", HelpInfo(
+        "wallets",
+        "Displays all wallet addresses in alphabetical order.",
+        "",
+        "make-wallet w2 second 500\n"
+        "  make-wallet w1 first 1000\n"
+        "  wallets",
+        "<w1, w2>",
+        "Prints <NOTHING FOUND> when there are no wallets."));
+    help.push("make-transfer", HelpInfo(
+        "make-transfer <id> <from> <to> <amount>",
+        "Transfers funds between two existing wallets.",
+        "id       Unique transfer ID.\n"
+        "  from     Source wallet address.\n"
+        "  to       Target wallet address.\n"
+        "  amount   Positive transfer amount.",
+        "make-wallet w1 source 1000\n"
+        "  make-wallet w2 target 0\n"
+        "  make-transfer t1 w1 w2 250",
+        "(no output on success)",
+        "Insufficient funds and non-positive amounts are rejected.\n"
+        "  Arithmetic overflow prints <OVERFLOW ERROR>."));
+    help.push("show-transfer", HelpInfo(
+        "show-transfer <id>",
+        "Displays information about one transfer.",
+        "id   ID of an existing transfer.",
+        "make-wallet w1 source 1000\n"
+        "  make-wallet w2 target 0\n"
+        "  make-transfer t1 w1 w2 250\n"
+        "  show-transfer t1",
+        "<ID: t1, FROM: w1, TO: w2, AMOUNT: 250>",
+        "A missing transfer is rejected."));
+    help.push("transfers", HelpInfo(
+        "transfers <address>",
+        "Displays IDs of all transfers related to a wallet.",
+        "address   Address of an existing wallet.",
+        "make-wallet w1 source 100\n"
+        "  make-wallet w2 target 0\n"
+        "  make-transfer t1 w1 w2 25\n"
+        "  transfers w1",
+        "<t1>",
+        "Prints <NOTHING FOUND> when the wallet has no transfers."));
+    help.push("path", HelpInfo(
+        "path <from> <to>",
+        "Finds a shortest directed transfer path between two wallets.",
+        "from   Starting wallet address.\n"
+        "  to     Target wallet address.",
+        "make-wallet w1 source 100\n"
+        "  make-wallet w2 middle 0\n"
+        "  make-wallet w4 target 0\n"
+        "  make-transfer t1 w1 w2 10\n"
+        "  make-transfer t2 w2 w4 5\n"
+        "  path w1 w4",
+        "<w1 -> w2 -> w4>",
+        "Prints <NOTHING FOUND> when no path exists."));
+    help.push("related", HelpInfo(
+        "related <address>",
+        "Displays wallets directly connected by incoming and outgoing transfers.",
+        "address   Address of an existing wallet.",
+        "make-wallet w1 source 100\n"
+        "  make-wallet w2 middle 0\n"
+        "  make-wallet w4 target 0\n"
+        "  make-transfer t1 w1 w2 10\n"
+        "  make-transfer t2 w2 w4 5\n"
+        "  related w2",
+        "<IN: w1; OUT: w4>",
+        "Prints <NOTHING FOUND> when there are no direct connections."));
+    help.push("sinks", HelpInfo(
+        "sinks <address> <max-depth>",
+        "Displays wallets reachable within the specified transfer depth.",
+        "address     Starting wallet address.\n"
+        "  max-depth   Positive maximum path depth.",
+        "make-wallet w1 source 100\n"
+        "  make-wallet w2 first 0\n"
+        "  make-wallet w3 second 0\n"
+        "  make-wallet w4 target 0\n"
+        "  make-transfer t1 w1 w2 10\n"
+        "  make-transfer t2 w1 w3 10\n"
+        "  make-transfer t3 w2 w4 5\n"
+        "  sinks w1 2",
+        "<w2, w3, w4>",
+        "Results are unique and sorted by address."));
+    help.push("top-wallets", HelpInfo(
+        "top-wallets <top-k>",
+        "Displays wallets with the highest balances.",
+        "top-k   Positive maximum number of wallets to display.",
+        "make-wallet w1 first 1000\n"
+        "  make-wallet w2 second 500\n"
+        "  make-wallet w3 third 100\n"
+        "  top-wallets 2",
+        "<CASE: 1, ADDRESS: w1, BALANCE: 1000>\n"
+        "  <CASE: 2, ADDRESS: w2, BALANCE: 500>",
+        "Equal balances are ordered by wallet address."));
+    help.push("detect-cycles", HelpInfo(
+        "detect-cycles <max-depth> <top-k>",
+        "Finds unique directed transfer cycles.",
+        "max-depth   Positive maximum cycle length.\n"
+        "  top-k       Positive maximum number of results.",
+        "make-wallet w1 first 100\n"
+        "  make-wallet w2 second 0\n"
+        "  make-wallet w3 third 0\n"
+        "  make-transfer t1 w1 w2 10\n"
+        "  make-transfer t2 w2 w3 5\n"
+        "  make-transfer t3 w3 w1 1\n"
+        "  detect-cycles 3 1",
+        "<CASE: 1, LENGTH: 3>\n"
+        "  <w1 -> w2 -> w3 -> w1>",
+        "Prints <NOTHING FOUND> when no cycle is found."));
+    help.push("detect-laundry", HelpInfo(
+        "detect-laundry <max-depth> <min-branches> <top-k>",
+        "Finds suspicious money flows that split into branches and reach\n"
+        "  a common target.",
+        "max-depth     Positive maximum transfer-chain depth.\n"
+        "  min-branches  Minimum number of branches (at least 2).\n"
+        "  top-k         Positive maximum number of results.",
+        "make-wallet s source 100\n"
+        "  make-wallet a1 branch1 0\n"
+        "  make-wallet a2 branch2 0\n"
+        "  make-wallet x middle 0\n"
+        "  make-wallet t target 0\n"
+        "  make-transfer e1 s a1 50\n"
+        "  make-transfer e2 s a2 50\n"
+        "  make-transfer e3 a1 x 10\n"
+        "  make-transfer e4 a2 x 10\n"
+        "  make-transfer e5 x t 20\n"
+        "  detect-laundry 3 2 1",
+        "<CASE: 1, SOURCE: s, TARGET: t, SCORE: 12040>\n"
+        "  <BRANCHES: 2, DEPTH: 3, REACHED: 20>\n"
+        "  <s -> a1 : 50>\n"
+        "  <s -> a2 : 50>\n"
+        "  <a1 -> x : 10>\n"
+        "  <a2 -> x : 10>\n"
+        "  <x -> t : 20>",
+        "REACHED is the amount that reached the target.\n"
+        "  Edge amounts show the recorded transfer history.\n"
+        "  SCORE = REACHED * BRANCHES + DEPTH * 4000.\n"
+        "  A higher score means a larger, deeper or more branched flow."));
+    help.push("save", HelpInfo(
+        "save <filename>",
+        "Saves wallets, transfers and statistics to a file.",
+        "filename   Name or path of the destination file.",
+        "make-wallet w1 main 100\n"
+        "  make-wallet w2 dst 0\n"
+        "  make-transfer t1 w1 w2 40\n"
+        "  save state.txt",
+        "<OK>",
+        "An unavailable destination file is rejected."));
+    help.get("save").fileFormat =
+        "WALLETS <wallet-count>\n"
+        "  W <address> <label> <balance> <in-count> <out-count> <in-sum> <out-sum>\n"
+        "  TRANSFERS <transfer-count>\n"
+        "  T <id> <from> <to> <amount> <order>\n"
+        "\n"
+        "  Example file:\n"
+        "  WALLETS 2\n"
+        "  W w1 main 60 0 1 0 40\n"
+        "  W w2 dst 40 1 0 40 0\n"
+        "  TRANSFERS 1\n"
+        "  T t1 w1 w2 40 1";
+    help.push("load", HelpInfo(
+        "load <filename>",
+        "Loads wallets, transfers and statistics from a saved file.",
+        "filename   Name or path of an existing state file.",
+        "make-wallet w1 main 100\n"
+        "  make-wallet w2 dst 0\n"
+        "  make-transfer t1 w1 w2 40\n"
+        "  save state.txt\n"
+        "  load state.txt",
+        "(no output on success)",
+        "Invalid files are rejected without replacing the current state."));
+    help.get("load").fileFormat =
+        "WALLETS <wallet-count>\n"
+        "  W <address> <label> <balance> <in-count> <out-count> <in-sum> <out-sum>\n"
+        "  TRANSFERS <transfer-count>\n"
+        "  T <id> <from> <to> <amount> <order>\n"
+        "\n"
+        "  Example file:\n"
+        "  WALLETS 2\n"
+        "  W w1 main 60 0 1 0 40\n"
+        "  W w2 dst 40 1 0 40 0\n"
+        "  TRANSFERS 1\n"
+        "  T t1 w1 w2 40 1";
+    return help;
+  }
+
+  void printDetailedHelp(std::ostream& output, const std::string& name,
+      const HelpInfo& info)
+  {
+    std::string title = name;
+    std::transform(title.begin(), title.end(), title.begin(), ::toupper);
+    output << "=== " << title << " ===\n\n"
+        << "USAGE:\n  " << info.usage << "\n\n"
+        << "DESCRIPTION:\n  " << info.description << "\n\n";
+    if (!info.parameters.empty()) {
+      output << "PARAMETERS:\n  " << info.parameters << "\n\n";
+    }
+    output << "EXAMPLE:\n  " << info.example << "\n\n"
+        << "OUTPUT:\n  " << info.result << "\n\n";
+    if (!info.fileFormat.empty()) {
+      output << "FILE FORMAT:\n  " << info.fileFormat << "\n\n";
+    }
+    output << "NOTES:\n  " << info.notes << '\n';
+  }
+
   bool helpCommand(muraviev::CommandContext&, const Tokens& tokens,
       std::ostream& output)
   {
-    if (muraviev::countTokens(tokens) != 1) {
+    const size_t tokenCount = muraviev::countTokens(tokens);
+    if (tokenCount == 2) {
+      const std::string& name = muraviev::tokenAt(tokens, 1);
+      HelpTable help = createHelpTable();
+      if (!help.contains(name)) {
+        return false;
+      }
+      printDetailedHelp(output, name, help.get(name));
+      return true;
+    }
+    if (tokenCount != 1) {
       return false;
     }
     output <<
@@ -680,11 +959,11 @@ namespace
         "  Show directly related wallets.\n\n"
         "sinks <address> <max-depth>\n"
         "  Find reachable wallets.\n\n"
-        "top-wallets <count>\n"
+        "top-wallets <top-k>\n"
         "  Show wallets with the highest balances.\n\n"
-        "detect-cycles <max-depth> <count>\n"
+        "detect-cycles <max-depth> <top-k>\n"
         "  Find transfer cycles.\n\n"
-        "detect-laundry <max-depth> <min-branches> <count>\n"
+        "detect-laundry <max-depth> <min-branches> <top-k>\n"
         "  Find suspicious money flows.\n\n"
         "save <filename>\n"
         "  Save the current state.\n\n"

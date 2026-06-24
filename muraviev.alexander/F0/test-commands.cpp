@@ -146,11 +146,11 @@ BOOST_AUTO_TEST_CASE(test_commands_help)
       "  Show directly related wallets.\n\n"
       "sinks <address> <max-depth>\n"
       "  Find reachable wallets.\n\n"
-      "top-wallets <count>\n"
+      "top-wallets <top-k>\n"
       "  Show wallets with the highest balances.\n\n"
-      "detect-cycles <max-depth> <count>\n"
+      "detect-cycles <max-depth> <top-k>\n"
       "  Find transfer cycles.\n\n"
-      "detect-laundry <max-depth> <min-branches> <count>\n"
+      "detect-laundry <max-depth> <min-branches> <top-k>\n"
       "  Find suspicious money flows.\n\n"
       "save <filename>\n"
       "  Save the current state.\n\n"
@@ -159,7 +159,104 @@ BOOST_AUTO_TEST_CASE(test_commands_help)
       "Use help <command> for detailed information.\n");
 }
 
-BOOST_AUTO_TEST_CASE(test_commands_help_rejects_arguments_for_now)
+BOOST_AUTO_TEST_CASE(test_commands_detailed_help)
 {
-  BOOST_TEST(runCommands("help make-wallet\n") == "<INVALID COMMAND>\n");
+  BOOST_TEST(runCommands("help detect-laundry\n") ==
+      "=== DETECT-LAUNDRY ===\n\n"
+      "USAGE:\n"
+      "  detect-laundry <max-depth> <min-branches> <top-k>\n\n"
+      "DESCRIPTION:\n"
+      "  Finds suspicious money flows that split into branches and reach\n"
+      "  a common target.\n\n"
+      "PARAMETERS:\n"
+      "  max-depth     Positive maximum transfer-chain depth.\n"
+      "  min-branches  Minimum number of branches (at least 2).\n"
+      "  top-k         Positive maximum number of results.\n\n"
+      "EXAMPLE:\n"
+      "  make-wallet s source 100\n"
+      "  make-wallet a1 branch1 0\n"
+      "  make-wallet a2 branch2 0\n"
+      "  make-wallet x middle 0\n"
+      "  make-wallet t target 0\n"
+      "  make-transfer e1 s a1 50\n"
+      "  make-transfer e2 s a2 50\n"
+      "  make-transfer e3 a1 x 10\n"
+      "  make-transfer e4 a2 x 10\n"
+      "  make-transfer e5 x t 20\n"
+      "  detect-laundry 3 2 1\n\n"
+      "OUTPUT:\n"
+      "  <CASE: 1, SOURCE: s, TARGET: t, SCORE: 12040>\n"
+      "  <BRANCHES: 2, DEPTH: 3, REACHED: 20>\n"
+      "  <s -> a1 : 50>\n"
+      "  <s -> a2 : 50>\n"
+      "  <a1 -> x : 10>\n"
+      "  <a2 -> x : 10>\n"
+      "  <x -> t : 20>\n\n"
+      "NOTES:\n"
+      "  REACHED is the amount that reached the target.\n"
+      "  Edge amounts show the recorded transfer history.\n"
+      "  SCORE = REACHED * BRANCHES + DEPTH * 4000.\n"
+      "  A higher score means a larger, deeper or more branched flow.\n");
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_detailed_help_rejects_unknown_commands)
+{
+  BOOST_TEST(runCommands(
+      "help help\n"
+      "help unknown\n"
+      "help make-wallet extra\n") ==
+      "<INVALID COMMAND>\n"
+      "<INVALID COMMAND>\n"
+      "<INVALID COMMAND>\n");
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_detailed_help_exists_for_every_command)
+{
+  const std::string output = runCommands(
+      "help make-wallet\n"
+      "help show-wallet\n"
+      "help drop-wallet\n"
+      "help wallets\n"
+      "help make-transfer\n"
+      "help show-transfer\n"
+      "help transfers\n"
+      "help path\n"
+      "help related\n"
+      "help sinks\n"
+      "help top-wallets\n"
+      "help detect-cycles\n"
+      "help detect-laundry\n"
+      "help save\n"
+      "help load\n");
+  BOOST_TEST(output.find("<INVALID COMMAND>") == std::string::npos);
+  BOOST_TEST(output.find("=== MAKE-WALLET ===") != std::string::npos);
+  BOOST_TEST(output.find("=== LOAD ===") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_help_omits_empty_parameters_section)
+{
+  const std::string output = runCommands("help wallets\n");
+  BOOST_TEST(output.find("PARAMETERS:") == std::string::npos);
+  BOOST_TEST(output.find("(none)") == std::string::npos);
+  BOOST_TEST(output.find(
+      "EXAMPLE:\n  make-wallet w2 second 500\n"
+      "  make-wallet w1 first 1000\n"
+      "  wallets\n") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_save_and_load_help_show_file_format)
+{
+  const std::string output = runCommands(
+      "help save\n"
+      "help load\n");
+  BOOST_TEST(output.find("WALLETS <wallet-count>") != std::string::npos);
+  BOOST_TEST(output.find(
+      "W <address> <label> <balance> <in-count> <out-count> <in-sum> <out-sum>") !=
+      std::string::npos);
+  BOOST_TEST(output.find("TRANSFERS <transfer-count>") != std::string::npos);
+  BOOST_TEST(output.find("T <id> <from> <to> <amount> <order>") !=
+      std::string::npos);
+  BOOST_TEST(output.find("T t1 w1 w2 40 1") != std::string::npos);
+  BOOST_TEST(output.find("FILE FORMAT:") != std::string::npos);
+  BOOST_TEST(output.find("Example file:") != std::string::npos);
 }
