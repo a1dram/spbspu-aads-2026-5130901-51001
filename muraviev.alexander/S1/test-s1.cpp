@@ -8,6 +8,25 @@
 
 using namespace muraviev;
 
+namespace
+{
+  struct Greater
+  {
+    bool operator()(int lhs, int rhs) const
+    {
+      return lhs > rhs;
+    }
+  };
+
+  struct IsEven
+  {
+    bool operator()(int value) const
+    {
+      return value % 2 == 0;
+    }
+  };
+}
+
 BOOST_AUTO_TEST_CASE(test_list_empty_after_default_constructor)
 {
   List< int > lst;
@@ -119,6 +138,278 @@ BOOST_AUTO_TEST_CASE(test_list_clear)
   lst.clear();
 
   BOOST_TEST(lst.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_all)
+{
+  List< int > a;
+  a.pushFront(2);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(4);
+  b.pushFront(3);
+
+  a.splice(a.last(), b);
+
+  int expected[4] = {1, 2, 3, 4};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+  BOOST_TEST(b.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_one)
+{
+  List< int > a;
+  a.pushFront(3);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(4);
+  b.pushFront(2);
+
+  a.splice(a.begin(), b, b.begin());
+
+  int expectedA[3] = {1, 2, 3};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expectedA[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 3);
+  BOOST_TEST(*b.begin() == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_range)
+{
+  List< int > a;
+  a.pushFront(5);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(4);
+  b.pushFront(3);
+  b.pushFront(2);
+
+  List< int >::iter first = b.begin();
+  List< int >::iter last = first;
+  ++last;
+  ++last;
+  a.splice(a.begin(), b, first, last);
+
+  int expectedA[4] = {1, 2, 3, 5};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expectedA[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+  BOOST_TEST(*b.begin() == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_to_empty)
+{
+  List< int > a;
+  List< int > b;
+  b.pushFront(2);
+  b.pushFront(1);
+
+  a.splice(a.end(), b);
+
+  BOOST_TEST(*a.begin() == 1);
+  BOOST_TEST(*a.last() == 2);
+  BOOST_TEST(b.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_inside_same_list)
+{
+  List< int > lst;
+  lst.pushFront(4);
+  lst.pushFront(3);
+  lst.pushFront(2);
+  lst.pushFront(1);
+
+  List< int >::iter moved = lst.begin();
+  ++moved;
+  lst.splice(lst.last(), lst, moved);
+
+  int expected[4] = {1, 3, 4, 2};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_sort)
+{
+  List< int > lst;
+  lst.pushFront(2);
+  lst.pushFront(4);
+  lst.pushFront(1);
+  lst.pushFront(3);
+
+  lst.sort();
+
+  int expected[4] = {1, 2, 3, 4};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_sort_with_compare)
+{
+  List< int > lst;
+  lst.pushFront(2);
+  lst.pushFront(4);
+  lst.pushFront(1);
+  lst.pushFront(3);
+
+  lst.sort(Greater());
+
+  int expected[4] = {4, 3, 2, 1};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_merge)
+{
+  List< int > a;
+  a.pushFront(5);
+  a.pushFront(3);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(6);
+  b.pushFront(4);
+  b.pushFront(2);
+
+  a.merge(b);
+
+  int expected[6] = {1, 2, 3, 4, 5, 6};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 6);
+  BOOST_TEST(b.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_merge_with_compare)
+{
+  List< int > a;
+  a.pushFront(1);
+  a.pushFront(3);
+  a.pushFront(5);
+  List< int > b;
+  b.pushFront(2);
+  b.pushFront(4);
+  b.pushFront(6);
+
+  a.merge(b, Greater());
+
+  int expected[6] = {6, 5, 4, 3, 2, 1};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 6);
+  BOOST_TEST(b.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_partition)
+{
+  List< int > lst;
+  lst.pushFront(4);
+  lst.pushFront(3);
+  lst.pushFront(2);
+  lst.pushFront(1);
+
+  List< int >::iter border = lst.partition(IsEven());
+
+  int expected[4] = {2, 4, 1, 3};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+  BOOST_TEST(*border == 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_partition_without_rejected_elements)
+{
+  List< int > lst;
+  lst.pushFront(4);
+  lst.pushFront(2);
+
+  List< int >::iter border = lst.partition(IsEven());
+
+  BOOST_TEST((border == lst.end()));
+  BOOST_TEST(*lst.begin() == 2);
+  BOOST_TEST(*lst.last() == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_algorithms_keep_element_addresses)
+{
+  List< int > a;
+  a.pushFront(3);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(4);
+  b.pushFront(2);
+
+  int* addresses[4] = {};
+  for (List< int >::iter it = a.begin(); it != a.end(); ++it) {
+    addresses[*it - 1] = &*it;
+  }
+  for (List< int >::iter it = b.begin(); it != b.end(); ++it) {
+    addresses[*it - 1] = &*it;
+  }
+
+  a.sort();
+  b.sort();
+  a.merge(b);
+  a.partition(IsEven());
+
+  for (List< int >::iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(&*it == addresses[*it - 1]);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_range_inside_same_list)
+{
+  List< int > lst;
+  lst.pushFront(5);
+  lst.pushFront(4);
+  lst.pushFront(3);
+  lst.pushFront(2);
+  lst.pushFront(1);
+
+  List< int >::iter first = lst.begin();
+  ++first;
+  List< int >::iter last = first;
+  ++last;
+  ++last;
+  lst.splice(lst.last(), lst, first, last);
+
+  int expected[5] = {1, 4, 5, 2, 3};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 5);
 }
 
 BOOST_AUTO_TEST_CASE(test_list_copy_constructor)
