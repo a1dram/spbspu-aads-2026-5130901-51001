@@ -273,6 +273,52 @@ BOOST_AUTO_TEST_CASE(test_list_sort_with_compare)
   BOOST_TEST(i == 4);
 }
 
+BOOST_AUTO_TEST_CASE(test_list_merge)
+{
+  List< int > a;
+  a.pushFront(5);
+  a.pushFront(3);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(6);
+  b.pushFront(4);
+  b.pushFront(2);
+
+  a.merge(b);
+
+  int expected[6] = {1, 2, 3, 4, 5, 6};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 6);
+  BOOST_TEST(b.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_merge_with_compare)
+{
+  List< int > a;
+  a.pushFront(1);
+  a.pushFront(3);
+  a.pushFront(5);
+  List< int > b;
+  b.pushFront(2);
+  b.pushFront(4);
+  b.pushFront(6);
+
+  a.merge(b, Greater());
+
+  int expected[6] = {6, 5, 4, 3, 2, 1};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 6);
+  BOOST_TEST(b.empty());
+}
+
 BOOST_AUTO_TEST_CASE(test_list_copy_constructor)
 {
   List< int > a;

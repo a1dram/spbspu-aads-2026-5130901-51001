@@ -45,6 +45,10 @@ namespace muraviev
     template< class Compare >
     void sort(Compare compare);
 
+    void merge(List& other);
+    template< class Compare >
+    void merge(List& other, Compare compare);
+
   private:
     bool contains(Node< T >* node) const;
     Node< T >* findPrevious(Node< T >* node) const;
@@ -406,6 +410,94 @@ namespace muraviev
       tail_ = tail_->next;
     }
     tail_->next = head_;
+  }
+
+  template< class T >
+  void List< T >::merge(List& other)
+  {
+    merge(other, std::less< T >());
+  }
+
+  template< class T >
+  template< class Compare >
+  void List< T >::merge(List& other, Compare compare)
+  {
+    if (this == &other || other.empty()) {
+      return;
+    }
+    if (empty()) {
+      splice(end(), other);
+      return;
+    }
+
+    tail_->next = nullptr;
+    other.tail_->next = nullptr;
+
+    Node< T >* left = head_;
+    Node< T >* right = other.head_;
+    Node< T >* merged = nullptr;
+    Node< T >* mergedLast = nullptr;
+
+    try {
+      while (left != nullptr && right != nullptr) {
+        Node< T >* selected = nullptr;
+        if (compare(right->data, left->data)) {
+          selected = right;
+          right = right->next;
+        } else {
+          selected = left;
+          left = left->next;
+        }
+
+        if (merged == nullptr) {
+          merged = selected;
+        } else {
+          mergedLast->next = selected;
+        }
+        mergedLast = selected;
+      }
+    } catch (...) {
+      if (merged == nullptr) {
+        merged = left;
+      } else {
+        mergedLast->next = left;
+      }
+      if (merged == nullptr) {
+        merged = right;
+      } else {
+        Node< T >* last = merged;
+        while (last->next != nullptr) {
+          last = last->next;
+        }
+        last->next = right;
+      }
+
+      head_ = merged;
+      tail_ = head_;
+      while (tail_->next != nullptr) {
+        tail_ = tail_->next;
+      }
+      tail_->next = head_;
+      other.head_ = nullptr;
+      other.tail_ = nullptr;
+      throw;
+    }
+
+    Node< T >* rest = left == nullptr ? right : left;
+    if (merged == nullptr) {
+      merged = rest;
+    } else {
+      mergedLast->next = rest;
+    }
+
+    head_ = merged;
+    tail_ = head_;
+    while (tail_->next != nullptr) {
+      tail_ = tail_->next;
+    }
+    tail_->next = head_;
+    other.head_ = nullptr;
+    other.tail_ = nullptr;
   }
 
   template< class T >
