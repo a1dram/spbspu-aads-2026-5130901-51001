@@ -8,6 +8,13 @@
 
 namespace muraviev
 {
+  enum TransferResult
+  {
+    transferOk,
+    transferInvalid,
+    transferOverflow
+  };
+
   class CommandContext
   {
   public:
@@ -23,7 +30,7 @@ namespace muraviev
     bool addWallet(const std::string& address, const std::string& label,
         long long balance);
     bool dropWallet(const std::string& address);
-    bool makeTransfer(const std::string& id, const std::string& from,
+    TransferResult makeTransfer(const std::string& id, const std::string& from,
         const std::string& to, long long amount);
     void clear();
     void setNextOrder(size_t order);

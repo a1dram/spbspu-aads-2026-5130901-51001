@@ -71,6 +71,10 @@ bool muraviev::parseNonNegativeSize(const std::string& text, size_t& value)
   if (!parseNonNegativeLongLong(text, parsed)) {
     return false;
   }
+  if (static_cast< unsigned long long >(parsed) >
+      std::numeric_limits< size_t >::max()) {
+    return false;
+  }
   value = static_cast< size_t >(parsed);
   return true;
 }

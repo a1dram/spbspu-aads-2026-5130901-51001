@@ -1,6 +1,7 @@
 #include "storage.hpp"
 
 #include <fstream>
+#include <limits>
 
 #include "parsing.hpp"
 
@@ -103,18 +104,31 @@ bool muraviev::CommandContext::dropWallet(const std::string& address)
   return true;
 }
 
-bool muraviev::CommandContext::makeTransfer(const std::string& id,
+muraviev::TransferResult muraviev::CommandContext::makeTransfer(
+    const std::string& id,
     const std::string& from, const std::string& to, long long amount)
 {
   if (transfers_.contains(id) || !wallets_.contains(from) ||
       !wallets_.contains(to) || amount <= 0 || from == to) {
-    return false;
+    return transferInvalid;
   }
   Wallet& source = wallets_.get(from);
   Wallet& target = wallets_.get(to);
   if (source.balance < amount) {
-    return false;
+    return transferInvalid;
   }
+
+  const long long longMax = std::numeric_limits< long long >::max();
+  const size_t sizeMax = std::numeric_limits< size_t >::max();
+  if (target.balance > longMax - amount ||
+      source.outSum > longMax - amount ||
+      target.inSum > longMax - amount ||
+      source.outCount == sizeMax ||
+      target.inCount == sizeMax ||
+      nextOrder_ == sizeMax) {
+    return transferOverflow;
+  }
+
   source.balance -= amount;
   source.outCount += 1;
   source.outSum += amount;
@@ -130,7 +144,7 @@ bool muraviev::CommandContext::makeTransfer(const std::string& id,
     transferLog_.insert(transferLog_.last(), transfer);
   }
   ++nextOrder_;
-  return true;
+  return transferOk;
 }
 
 void muraviev::CommandContext::clear()
@@ -250,6 +264,9 @@ bool muraviev::loadContext(CommandContext& context, const std::string& filename)
     }
   }
   if (std::getline(input, line)) {
+    return false;
+  }
+  if (maxOrder == std::numeric_limits< size_t >::max()) {
     return false;
   }
   loaded.setNextOrder(maxOrder + 1);

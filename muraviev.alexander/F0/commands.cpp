@@ -153,13 +153,21 @@ namespace
   }
 
   bool makeTransferCommand(muraviev::CommandContext& context, const Tokens& tokens,
-      std::ostream&)
+      std::ostream& output)
   {
     long long amount = 0;
-    return muraviev::countTokens(tokens) == 5 &&
-        muraviev::parsePositiveLongLong(muraviev::tokenAt(tokens, 4), amount) &&
-        context.makeTransfer(muraviev::tokenAt(tokens, 1), muraviev::tokenAt(tokens, 2),
-            muraviev::tokenAt(tokens, 3), amount);
+    if (muraviev::countTokens(tokens) != 5 ||
+        !muraviev::parsePositiveLongLong(muraviev::tokenAt(tokens, 4), amount)) {
+      return false;
+    }
+    const muraviev::TransferResult result = context.makeTransfer(
+        muraviev::tokenAt(tokens, 1), muraviev::tokenAt(tokens, 2),
+        muraviev::tokenAt(tokens, 3), amount);
+    if (result == muraviev::transferOverflow) {
+      output << "<OVERFLOW ERROR>\n";
+      return true;
+    }
+    return result == muraviev::transferOk;
   }
 
   bool showTransferCommand(muraviev::CommandContext& context, const Tokens& tokens,

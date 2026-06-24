@@ -86,3 +86,38 @@ BOOST_AUTO_TEST_CASE(test_commands_invalid_arguments_and_numbers)
       "<INVALID COMMAND>\n"
       "<INVALID COMMAND>\n");
 }
+
+BOOST_AUTO_TEST_CASE(test_commands_transfer_rejects_balance_overflow_atomically)
+{
+  BOOST_TEST(runCommands(
+      "make-wallet src s 9223372036854775807\n"
+      "make-wallet dst d 9223372036854775800\n"
+      "make-transfer t1 src dst 10\n"
+      "show-wallet src\n"
+      "show-wallet dst\n"
+      "top-wallets 2\n") ==
+      "<OVERFLOW ERROR>\n"
+      "<ADDRESS: src, LABEL: s, BALANCE: 9223372036854775807, IN-COUNT: 0, "
+      "OUT-COUNT: 0, IN-SUM: 0, OUT-SUM: 0>\n"
+      "<ADDRESS: dst, LABEL: d, BALANCE: 9223372036854775800, IN-COUNT: 0, "
+      "OUT-COUNT: 0, IN-SUM: 0, OUT-SUM: 0>\n"
+      "<CASE: 1, ADDRESS: src, BALANCE: 9223372036854775807>\n"
+      "<CASE: 2, ADDRESS: dst, BALANCE: 9223372036854775800>\n");
+}
+
+BOOST_AUTO_TEST_CASE(test_commands_transfer_rejects_statistics_overflow_atomically)
+{
+  BOOST_TEST(runCommands(
+      "make-wallet a A 9223372036854775807\n"
+      "make-wallet b B 0\n"
+      "make-wallet c C 9223372036854775807\n"
+      "make-transfer t1 a b 9223372036854775807\n"
+      "make-transfer t2 c b 1\n"
+      "show-wallet b\n"
+      "show-wallet c\n") ==
+      "<OVERFLOW ERROR>\n"
+      "<ADDRESS: b, LABEL: B, BALANCE: 9223372036854775807, IN-COUNT: 1, "
+      "OUT-COUNT: 0, IN-SUM: 9223372036854775807, OUT-SUM: 0>\n"
+      "<ADDRESS: c, LABEL: C, BALANCE: 9223372036854775807, IN-COUNT: 0, "
+      "OUT-COUNT: 0, IN-SUM: 0, OUT-SUM: 0>\n");
+}
