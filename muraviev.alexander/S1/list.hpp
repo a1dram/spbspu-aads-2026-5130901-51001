@@ -49,6 +49,9 @@ namespace muraviev
     template< class Compare >
     void merge(List& other, Compare compare);
 
+    template< class Predicate >
+    iter partition(Predicate predicate);
+
   private:
     bool contains(Node< T >* node) const;
     Node< T >* findPrevious(Node< T >* node) const;
@@ -498,6 +501,82 @@ namespace muraviev
     tail_->next = head_;
     other.head_ = nullptr;
     other.tail_ = nullptr;
+  }
+
+  template< class T >
+  template< class Predicate >
+  typename List< T >::iter List< T >::partition(Predicate predicate)
+  {
+    if (empty()) {
+      return end();
+    }
+
+    tail_->next = nullptr;
+    Node< T >* accepted = nullptr;
+    Node< T >* acceptedLast = nullptr;
+    Node< T >* rejected = nullptr;
+    Node< T >* rejectedLast = nullptr;
+    Node< T >* current = head_;
+
+    try {
+      while (current != nullptr) {
+        Node< T >* next = current->next;
+        bool isAccepted = predicate(current->data);
+        current->next = nullptr;
+        if (isAccepted) {
+          if (accepted == nullptr) {
+            accepted = current;
+          } else {
+            acceptedLast->next = current;
+          }
+          acceptedLast = current;
+        } else {
+          if (rejected == nullptr) {
+            rejected = current;
+          } else {
+            rejectedLast->next = current;
+          }
+          rejectedLast = current;
+        }
+        current = next;
+      }
+    } catch (...) {
+      if (rejected == nullptr) {
+        rejected = current;
+      } else {
+        rejectedLast->next = current;
+      }
+      rejectedLast = current;
+
+      while (rejectedLast->next != nullptr) {
+        rejectedLast = rejectedLast->next;
+      }
+
+      if (accepted == nullptr) {
+        head_ = rejected;
+      } else {
+        acceptedLast->next = rejected;
+        head_ = accepted;
+      }
+      tail_ = rejectedLast;
+      tail_->next = head_;
+      throw;
+    }
+
+    if (accepted == nullptr) {
+      head_ = rejected;
+      tail_ = rejectedLast;
+    } else {
+      acceptedLast->next = rejected;
+      head_ = accepted;
+      tail_ = rejectedLast == nullptr ? acceptedLast : rejectedLast;
+    }
+    tail_->next = head_;
+
+    if (rejected == nullptr) {
+      return end();
+    }
+    return iter(rejected, head_);
   }
 
   template< class T >

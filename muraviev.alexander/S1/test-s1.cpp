@@ -17,6 +17,14 @@ namespace
       return lhs > rhs;
     }
   };
+
+  struct IsEven
+  {
+    bool operator()(int value) const
+    {
+      return value % 2 == 0;
+    }
+  };
 }
 
 BOOST_AUTO_TEST_CASE(test_list_empty_after_default_constructor)
@@ -317,6 +325,39 @@ BOOST_AUTO_TEST_CASE(test_list_merge_with_compare)
   }
   BOOST_TEST(i == 6);
   BOOST_TEST(b.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_partition)
+{
+  List< int > lst;
+  lst.pushFront(4);
+  lst.pushFront(3);
+  lst.pushFront(2);
+  lst.pushFront(1);
+
+  List< int >::iter border = lst.partition(IsEven());
+
+  int expected[4] = {2, 4, 1, 3};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+  BOOST_TEST(*border == 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_partition_without_rejected_elements)
+{
+  List< int > lst;
+  lst.pushFront(4);
+  lst.pushFront(2);
+
+  List< int >::iter border = lst.partition(IsEven());
+
+  BOOST_TEST((border == lst.end()));
+  BOOST_TEST(*lst.begin() == 2);
+  BOOST_TEST(*lst.last() == 4);
 }
 
 BOOST_AUTO_TEST_CASE(test_list_copy_constructor)
