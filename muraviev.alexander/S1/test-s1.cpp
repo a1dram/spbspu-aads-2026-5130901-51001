@@ -121,6 +121,109 @@ BOOST_AUTO_TEST_CASE(test_list_clear)
   BOOST_TEST(lst.empty());
 }
 
+BOOST_AUTO_TEST_CASE(test_list_splice_all)
+{
+  List< int > a;
+  a.pushFront(2);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(4);
+  b.pushFront(3);
+
+  a.splice(a.last(), b);
+
+  int expected[4] = {1, 2, 3, 4};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+  BOOST_TEST(b.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_one)
+{
+  List< int > a;
+  a.pushFront(3);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(4);
+  b.pushFront(2);
+
+  a.splice(a.begin(), b, b.begin());
+
+  int expectedA[3] = {1, 2, 3};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expectedA[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 3);
+  BOOST_TEST(*b.begin() == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_range)
+{
+  List< int > a;
+  a.pushFront(5);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(4);
+  b.pushFront(3);
+  b.pushFront(2);
+
+  List< int >::iter first = b.begin();
+  List< int >::iter last = first;
+  ++last;
+  ++last;
+  a.splice(a.begin(), b, first, last);
+
+  int expectedA[4] = {1, 2, 3, 5};
+  size_t i = 0;
+  for (List< int >::c_iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(*it == expectedA[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+  BOOST_TEST(*b.begin() == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_to_empty)
+{
+  List< int > a;
+  List< int > b;
+  b.pushFront(2);
+  b.pushFront(1);
+
+  a.splice(a.end(), b);
+
+  BOOST_TEST(*a.begin() == 1);
+  BOOST_TEST(*a.last() == 2);
+  BOOST_TEST(b.empty());
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_inside_same_list)
+{
+  List< int > lst;
+  lst.pushFront(4);
+  lst.pushFront(3);
+  lst.pushFront(2);
+  lst.pushFront(1);
+
+  List< int >::iter moved = lst.begin();
+  ++moved;
+  lst.splice(lst.last(), lst, moved);
+
+  int expected[4] = {1, 3, 4, 2};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+}
+
 BOOST_AUTO_TEST_CASE(test_list_copy_constructor)
 {
   List< int > a;

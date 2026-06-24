@@ -35,7 +35,16 @@ namespace muraviev
     iter erase(iter pos);
     void clear();
 
+    void splice(iter pos, List& other);
+    void splice(iter pos, List& other, iter it);
+    void splice(iter pos, List& other, iter first, iter last);
+
   private:
+    bool contains(Node< T >* node) const;
+    Node< T >* findPrevious(Node< T >* node) const;
+    void insertNodes(Node< T >* pos, Node< T >* first, Node< T >* last);
+    void detachNodes(Node< T >* first, Node< T >* last);
+
     Node< T >* head_;
     Node< T >* tail_;
   };
@@ -45,7 +54,7 @@ namespace muraviev
     head_(nullptr),
     tail_(nullptr)
   {}
-
+  
   template< class T >
   List< T >::~List()
   {
@@ -232,7 +241,7 @@ namespace muraviev
       tail_ = prev;
     }
     delete pos.node_;
-
+    
     if (head_ == nullptr) {
       tail_ = nullptr;
       return end();
@@ -260,6 +269,160 @@ namespace muraviev
     }
     head_ = nullptr;
     tail_ = nullptr;
+  }
+
+  template< class T >
+  void List< T >::splice(iter pos, List& other)
+  {
+    if (other.empty() || this == &other) {
+      return;
+    }
+    if (pos.node_ != nullptr && !contains(pos.node_)) {
+      return;
+    }
+
+    Node< T >* first = other.head_;
+    Node< T >* last = other.tail_;
+    other.head_ = nullptr;
+    other.tail_ = nullptr;
+    insertNodes(pos.node_, first, last);
+  }
+
+  template< class T >
+  void List< T >::splice(iter pos, List& other, iter it)
+  {
+    iter last = it;
+    ++last;
+    splice(pos, other, it, last);
+  }
+
+  template< class T >
+  void List< T >::splice(iter pos, List& other, iter first, iter last)
+  {
+    if (first == last || first.node_ == nullptr || other.empty()) {
+      return;
+    }
+    if (pos.node_ != nullptr && !contains(pos.node_)) {
+      return;
+    }
+    if (!other.contains(first.node_)) {
+      return;
+    }
+
+    Node< T >* lastNode = first.node_;
+    while (lastNode != other.tail_ && lastNode->next != last.node_) {
+      lastNode = lastNode->next;
+    }
+    if (lastNode->next != last.node_ && last.node_ != nullptr) {
+      return;
+    }
+
+    if (this == &other) {
+      Node< T >* current = first.node_;
+      while (true) {
+        if (current == pos.node_) {
+          return;
+        }
+        if (current == lastNode) {
+          break;
+        }
+        current = current->next;
+      }
+
+      Node< T >* previous = findPrevious(first.node_);
+      if (pos.node_ == previous || (pos.node_ == nullptr && first.node_ == head_)) {
+        return;
+      }
+    }
+
+    Node< T >* firstNode = first.node_;
+    other.detachNodes(firstNode, lastNode);
+    insertNodes(pos.node_, firstNode, lastNode);
+  }
+
+  template< class T >
+  bool List< T >::contains(Node< T >* node) const
+  {
+    if (node == nullptr || empty()) {
+      return false;
+    }
+
+    Node< T >* current = head_;
+    while (true) {
+      if (current == node) {
+        return true;
+      }
+      if (current == tail_) {
+        break;
+      }
+      current = current->next;
+    }
+    return false;
+  }
+
+  template< class T >
+  Node< T >* List< T >::findPrevious(Node< T >* node) const
+  {
+    if (node == nullptr || empty()) {
+      return nullptr;
+    }
+
+    Node< T >* current = head_;
+    while (current != tail_ && current->next != node) {
+      current = current->next;
+    }
+    if (current->next == node) {
+      return current;
+    }
+    return nullptr;
+  }
+
+  template< class T >
+  void List< T >::insertNodes(Node< T >* pos, Node< T >* first, Node< T >* last)
+  {
+    if (empty()) {
+      head_ = first;
+      tail_ = last;
+      tail_->next = head_;
+      return;
+    }
+
+    if (pos == nullptr) {
+      last->next = head_;
+      head_ = first;
+      tail_->next = head_;
+      return;
+    }
+
+    last->next = pos->next;
+    pos->next = first;
+    if (pos == tail_) {
+      tail_ = last;
+    }
+    tail_->next = head_;
+  }
+
+  template< class T >
+  void List< T >::detachNodes(Node< T >* first, Node< T >* last)
+  {
+    Node< T >* previous = findPrevious(first);
+    Node< T >* next = last == tail_ ? head_ : last->next;
+
+    if (first == head_ && last == tail_) {
+      head_ = nullptr;
+      tail_ = nullptr;
+    } else {
+      if (first == head_) {
+        head_ = next;
+      } else {
+        previous->next = next;
+      }
+      if (last == tail_) {
+        tail_ = previous;
+      }
+      tail_->next = head_;
+    }
+    last->next = nullptr;
   }
 }
 
