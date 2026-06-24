@@ -67,7 +67,7 @@ namespace muraviev
     head_(nullptr),
     tail_(nullptr)
   {}
-  
+
   template< class T >
   List< T >::~List()
   {
@@ -254,7 +254,7 @@ namespace muraviev
       tail_ = prev;
     }
     delete pos.node_;
-    
+
     if (head_ == nullptr) {
       tail_ = nullptr;
       return end();
