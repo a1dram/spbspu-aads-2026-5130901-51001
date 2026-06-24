@@ -652,6 +652,48 @@ namespace
         muraviev::loadContext(context, muraviev::tokenAt(tokens, 1));
   }
 
+  bool helpCommand(muraviev::CommandContext&, const Tokens& tokens,
+      std::ostream& output)
+  {
+    if (muraviev::countTokens(tokens) != 1) {
+      return false;
+    }
+    output <<
+        "=== AVAILABLE COMMANDS ===\n\n"
+        "make-wallet <address> <label> <balance>\n"
+        "  Create a wallet.\n\n"
+        "show-wallet <address>\n"
+        "  Show wallet information and statistics.\n\n"
+        "drop-wallet <address>\n"
+        "  Delete a wallet without transfer history.\n\n"
+        "wallets\n"
+        "  Show all wallet addresses.\n\n"
+        "make-transfer <id> <from> <to> <amount>\n"
+        "  Make a transfer between wallets.\n\n"
+        "show-transfer <id>\n"
+        "  Show transfer information.\n\n"
+        "transfers <address>\n"
+        "  Show all transfer IDs related to a wallet.\n\n"
+        "path <from> <to>\n"
+        "  Find a path between wallets.\n\n"
+        "related <address>\n"
+        "  Show directly related wallets.\n\n"
+        "sinks <address> <max-depth>\n"
+        "  Find reachable wallets.\n\n"
+        "top-wallets <count>\n"
+        "  Show wallets with the highest balances.\n\n"
+        "detect-cycles <max-depth> <count>\n"
+        "  Find transfer cycles.\n\n"
+        "detect-laundry <max-depth> <min-branches> <count>\n"
+        "  Find suspicious money flows.\n\n"
+        "save <filename>\n"
+        "  Save the current state.\n\n"
+        "load <filename>\n"
+        "  Load a saved state.\n\n"
+        "Use help <command> for detailed information.\n";
+    return true;
+  }
+
   CommandTable createCommandTable()
   {
     CommandTable commands;
@@ -670,6 +712,7 @@ namespace
     commands.push("detect-laundry", detectLaundryCommand);
     commands.push("save", saveCommand);
     commands.push("load", loadCommand);
+    commands.push("help", helpCommand);
     return commands;
   }
 }
