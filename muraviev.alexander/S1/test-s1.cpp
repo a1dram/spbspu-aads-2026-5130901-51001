@@ -8,6 +8,17 @@
 
 using namespace muraviev;
 
+namespace
+{
+  struct Greater
+  {
+    bool operator()(int lhs, int rhs) const
+    {
+      return lhs > rhs;
+    }
+  };
+}
+
 BOOST_AUTO_TEST_CASE(test_list_empty_after_default_constructor)
 {
   List< int > lst;
@@ -216,6 +227,44 @@ BOOST_AUTO_TEST_CASE(test_list_splice_inside_same_list)
   lst.splice(lst.last(), lst, moved);
 
   int expected[4] = {1, 3, 4, 2};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_sort)
+{
+  List< int > lst;
+  lst.pushFront(2);
+  lst.pushFront(4);
+  lst.pushFront(1);
+  lst.pushFront(3);
+
+  lst.sort();
+
+  int expected[4] = {1, 2, 3, 4};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 4);
+}
+
+BOOST_AUTO_TEST_CASE(test_list_sort_with_compare)
+{
+  List< int > lst;
+  lst.pushFront(2);
+  lst.pushFront(4);
+  lst.pushFront(1);
+  lst.pushFront(3);
+
+  lst.sort(Greater());
+
+  int expected[4] = {4, 3, 2, 1};
   size_t i = 0;
   for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
     BOOST_TEST(*it == expected[i]);

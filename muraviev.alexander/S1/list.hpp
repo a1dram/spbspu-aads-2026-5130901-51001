@@ -1,6 +1,8 @@
 #ifndef LIST_HPP
 #define LIST_HPP
 
+#include <functional>
+
 #include "iterators.hpp"
 
 namespace muraviev
@@ -38,6 +40,10 @@ namespace muraviev
     void splice(iter pos, List& other);
     void splice(iter pos, List& other, iter it);
     void splice(iter pos, List& other, iter first, iter last);
+
+    void sort();
+    template< class Compare >
+    void sort(Compare compare);
 
   private:
     bool contains(Node< T >* node) const;
@@ -338,6 +344,68 @@ namespace muraviev
     Node< T >* firstNode = first.node_;
     other.detachNodes(firstNode, lastNode);
     insertNodes(pos.node_, firstNode, lastNode);
+  }
+
+  template< class T >
+  void List< T >::sort()
+  {
+    sort(std::less< T >());
+  }
+
+  template< class T >
+  template< class Compare >
+  void List< T >::sort(Compare compare)
+  {
+    if (empty() || head_ == tail_) {
+      return;
+    }
+
+    tail_->next = nullptr;
+    Node< T >* sorted = nullptr;
+    Node< T >* current = head_;
+
+    try {
+      while (current != nullptr) {
+        Node< T >* next = current->next;
+        if (sorted == nullptr || compare(current->data, sorted->data)) {
+          current->next = sorted;
+          sorted = current;
+        } else {
+          Node< T >* place = sorted;
+          while (place->next != nullptr && !compare(current->data, place->next->data)) {
+            place = place->next;
+          }
+          current->next = place->next;
+          place->next = current;
+        }
+        current = next;
+      }
+    } catch (...) {
+      if (sorted == nullptr) {
+        sorted = current;
+      } else {
+        Node< T >* sortedLast = sorted;
+        while (sortedLast->next != nullptr) {
+          sortedLast = sortedLast->next;
+        }
+        sortedLast->next = current;
+      }
+
+      head_ = sorted;
+      tail_ = head_;
+      while (tail_->next != nullptr) {
+        tail_ = tail_->next;
+      }
+      tail_->next = head_;
+      throw;
+    }
+
+    head_ = sorted;
+    tail_ = head_;
+    while (tail_->next != nullptr) {
+      tail_ = tail_->next;
+    }
+    tail_->next = head_;
   }
 
   template< class T >
