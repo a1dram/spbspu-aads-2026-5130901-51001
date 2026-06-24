@@ -360,6 +360,58 @@ BOOST_AUTO_TEST_CASE(test_list_partition_without_rejected_elements)
   BOOST_TEST(*lst.last() == 4);
 }
 
+BOOST_AUTO_TEST_CASE(test_list_algorithms_keep_element_addresses)
+{
+  List< int > a;
+  a.pushFront(3);
+  a.pushFront(1);
+  List< int > b;
+  b.pushFront(4);
+  b.pushFront(2);
+
+  int* addresses[4] = {};
+  for (List< int >::iter it = a.begin(); it != a.end(); ++it) {
+    addresses[*it - 1] = &*it;
+  }
+  for (List< int >::iter it = b.begin(); it != b.end(); ++it) {
+    addresses[*it - 1] = &*it;
+  }
+
+  a.sort();
+  b.sort();
+  a.merge(b);
+  a.partition(IsEven());
+
+  for (List< int >::iter it = a.begin(); it != a.end(); ++it) {
+    BOOST_TEST(&*it == addresses[*it - 1]);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(test_list_splice_range_inside_same_list)
+{
+  List< int > lst;
+  lst.pushFront(5);
+  lst.pushFront(4);
+  lst.pushFront(3);
+  lst.pushFront(2);
+  lst.pushFront(1);
+
+  List< int >::iter first = lst.begin();
+  ++first;
+  List< int >::iter last = first;
+  ++last;
+  ++last;
+  lst.splice(lst.last(), lst, first, last);
+
+  int expected[5] = {1, 4, 5, 2, 3};
+  size_t i = 0;
+  for (List< int >::c_iter it = lst.begin(); it != lst.end(); ++it) {
+    BOOST_TEST(*it == expected[i]);
+    ++i;
+  }
+  BOOST_TEST(i == 5);
+}
+
 BOOST_AUTO_TEST_CASE(test_list_copy_constructor)
 {
   List< int > a;
